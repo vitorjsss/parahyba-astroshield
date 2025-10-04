@@ -5,7 +5,6 @@ import { OrbitControls, Line, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { NASAAsteroid } from '../types/nasa';
 import { Badge } from './ui/badge';
-import { Button } from './ui/button';
 import { AlertTriangle, TrendingUp, Zap } from 'lucide-react';
 
 interface Globe3DProps {

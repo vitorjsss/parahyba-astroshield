@@ -2,19 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { WorldMap } from "./components/WorldMap";
 import { Globe3D } from "./components/Globe3D";
 import { ImpactAnimationScreen } from "./components/ImpactAnimationScreen";
-import {
-  AsteroidControls,
-  AsteroidParams,
-} from "./components/AsteroidControls";
-import { ImpactResults } from "./components/ImpactResults";
-import { AsteroidList } from "./components/AsteroidList";
-import { AsteroidDetails } from "./components/AsteroidDetails";
-import { AsteroidLegend } from "./components/AsteroidLegend";
-import { AsteroidStats } from "./components/AsteroidStats";
-import { Globe3DControls } from "./components/Globe3DControls";
+import { AsteroidParams } from "./types/AsteroidTypes";
 import { Badge } from "./components/ui/badge";
 import { Button } from "./components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import {
   Globe2,
   Map,
@@ -32,6 +22,8 @@ import {
 import { AsteroidPanel } from "./components/LeftPanel";
 import { cn } from "./components/ui/utils";
 import { RightPanel } from "./components/RighPanel";
+import { computeDamageRadiusBasicKm } from './utils/impact';
+import { simulateCustomImpact, simulateAsteroidImpact, ImpactApiResult } from './utils/Api';
 
 type ViewMode = "2d" | "3d" | "animation";
 
@@ -41,6 +33,7 @@ export default function App() {
   const [simulationResults, setSimulationResults] = useState<{
     params: AsteroidParams;
     impactPoint: [number, number];
+    api?: ImpactApiResult;
   } | null>(null);
 
   // NASA NEO data
@@ -140,9 +133,27 @@ export default function App() {
     setSimulationResults(null);
   };
 
-  const handleSimulate = (params: AsteroidParams) => {
-    if (impactPoint) {
-      setSimulationResults({ params, impactPoint });
+  const handleSimulate = async (params: AsteroidParams) => {
+    if (!impactPoint) return;
+    // Optimistic local result first
+    setSimulationResults({ params, impactPoint });
+    try {
+      let api: ImpactApiResult | undefined = undefined;
+      // If there is a selected asteroid with an ID, prefer the asteroid endpoint; otherwise use custom
+      if (selectedAsteroid && selectedAsteroid.id) {
+        api = await simulateAsteroidImpact({ asteroidId: selectedAsteroid.id, lat: impactPoint[1], lon: impactPoint[0] });
+      } else {
+        api = await simulateCustomImpact({
+          diameter_m: params.diameter,
+          velocity_kms: params.velocity,
+          density_kg_m3: params.density,
+          lat: impactPoint[1],
+          lon: impactPoint[0],
+        });
+      }
+      setSimulationResults({ params, impactPoint, api });
+    } catch (e: any) {
+      console.error("❌ Erro ao simular impacto:", e);
     }
   };
 
@@ -176,7 +187,6 @@ export default function App() {
         params: {
           diameter,
           velocity,
-          angle: 45,
           density: 3000,
         },
         impactPoint: [randomLng, randomLat],
@@ -216,7 +226,6 @@ export default function App() {
         params: {
           diameter,
           velocity,
-          angle: 45,
           density: 3000,
         },
         impactPoint: [randomLng, randomLat],
@@ -294,7 +303,10 @@ export default function App() {
             )
           ) : viewMode === "2d" ? (
             <>
-              <WorldMap onMapClick={handleMapClick} impactPoint={impactPoint} />
+              <WorldMap
+                onMapClick={handleMapClick}
+                impactPoint={impactPoint}
+              />
               {!impactPoint && (
                 <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">
                   <p className="opacity-80">
@@ -309,6 +321,16 @@ export default function App() {
                   <p className="font-mono">
                     {impactPoint[1].toFixed(4)}°, {impactPoint[0].toFixed(4)}°
                   </p>
+                  {simulationResults ? (
+                    <>
+                      <p className="opacity-80 mt-1">
+                        Impact radius ~ {computeDamageRadiusBasicKm(simulationResults.params).toFixed(1)} km
+                      </p>
+                      <p className="opacity-60 text-xs">Concentric rings show severe/moderate/light/thermal zones</p>
+                    </>
+                  ) : (
+                    <p className="opacity-60 mt-1">Press "Calculate Impact Effects" to compute radius</p>
+                  )}
                 </div>
               )}
             </>
@@ -367,19 +389,19 @@ export default function App() {
 
         {/* Side Panel - hidden during animation */}
         {viewMode !== "animation" && (
-  <RightPanel
-    asteroids={asteroids}
-    selectedAsteroid={selectedAsteroid}
-    onAsteroidSelect={handleAsteroidSelect}
-    impactPoint={impactPoint}
-    handleSimulate={handleSimulate}
-    simulationResults={simulationResults || undefined}
-    onClearSelection={() => {
-      setSelectedAsteroid(null);
-      setFocusedAsteroid(null);
-    }}
-  />
-)}
+          <RightPanel
+            asteroids={asteroids}
+            selectedAsteroid={selectedAsteroid}
+            onAsteroidSelect={handleAsteroidSelect}
+            impactPoint={impactPoint}
+            handleSimulate={handleSimulate}
+            simulationResults={simulationResults || undefined}
+            onClearSelection={() => {
+              setSelectedAsteroid(null);
+              setFocusedAsteroid(null);
+            }}
+          />
+        )}
 
       </div>
     </div>

@@ -1,41 +1,36 @@
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { AlertTriangle, Activity, Waves, Wind } from 'lucide-react';
-import { AsteroidParams } from './AsteroidControls';
+import { ImpactApiResult } from '../utils/Api';
 
 interface ImpactResultsProps {
-  params: AsteroidParams;
   impactPoint: [number, number];
+  results: ImpactApiResult;
 }
 
-export function ImpactResults({ params, impactPoint }: ImpactResultsProps) {
-  // Calculations based on impact physics
-  const mass = (4/3) * Math.PI * Math.pow(params.diameter/2, 3) * params.density;
-  const energyJoules = 0.5 * mass * Math.pow(params.velocity * 1000, 2);
-  const energyMegatons = energyJoules / (4.184 * Math.pow(10, 15));
-  
-  // Crater diameter estimation (simplified scaling law)
-  const craterDiameter = 1.8 * Math.pow(energyMegatons, 0.31) * 1000; // in meters
-  
-  // Seismic magnitude estimation
-  const seismicMagnitude = 0.67 * Math.log10(energyJoules) - 5.87;
-  
+export function ImpactResults({ impactPoint, results }: ImpactResultsProps) {
+  // Use only the passed results, no local calculations
+  const energyMegatons = results.energy_megatons_tnt;
+  const craterDiameterKm = results.crater_diameter_km;
+  const seismicMagnitude = results.seismic_magnitude;
+
   // Determine if ocean or land impact (simplified - check if near coastal areas)
   const isOceanImpact = Math.abs(impactPoint[1]) < 60; // Simplified ocean check
-  
-  // Tsunami height estimation (very simplified)
+
+  // Tsunami height estimation based on energy from results
   const tsunamiHeight = isOceanImpact ? Math.min(50, energyMegatons * 0.1) : 0;
 
   const getSeverityColor = (megatons: number) => {
     if (megatons < 1) return 'text-yellow-500';
-    if (megatons < 100) return 'text-orange-500';
-    return 'text-red-500';
+    if (megatons < 20) return 'text-orange-500';
+    if (megatons < 200) return 'text-red-500';
+    return 'text-red-600';
   };
 
   const getSeverityBadge = (megatons: number) => {
     if (megatons < 1) return { variant: 'secondary' as const, text: 'Minor' };
-    if (megatons < 10) return { variant: 'default' as const, text: 'Moderate' };
-    if (megatons < 100) return { variant: 'destructive' as const, text: 'Severe' };
+    if (megatons < 20) return { variant: 'default' as const, text: 'Moderate' };
+    if (megatons < 200) return { variant: 'destructive' as const, text: 'Severe' };
     return { variant: 'destructive' as const, text: 'Catastrophic' };
   };
 
@@ -72,11 +67,31 @@ export function ImpactResults({ params, impactPoint }: ImpactResultsProps) {
               <h3>Crater Formation</h3>
             </div>
             <p className="text-chart-2">
-              {craterDiameter.toFixed(0)} meters diameter
+              {(craterDiameterKm * 1000).toFixed(0)} meters diameter
             </p>
+            {results.context && (
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-emerald-500" />
+                  <h3>Estimated Exposure</h3>
+                </div>
+                <p className="opacity-80">Population affected: {results.context.population_estimated_affected.toLocaleString()}</p>
+                <p className="opacity-80">Buildings within impact: ~{results.context.buildings_within_m.toFixed(0)} m</p>
+                <p className="opacity-80">Buildings count: {results.context.buildings_count.toLocaleString()}</p>
+              </div>
+            )}
             <p className="opacity-60">
-              Approximately {(craterDiameter / 1000).toFixed(2)} km wide
+              Approximately {craterDiameterKm.toFixed(2)} km wide
             </p>
+          </div>
+
+          <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+            <div className="flex items-center gap-2">
+              <Activity className="w-4 h-4 text-red-500" />
+              <h3>Impact Radius</h3>
+            </div>
+            <p className="opacity-80">Crater diameter: {craterDiameterKm.toFixed(1)} km</p>
+            <p className="opacity-60 text-sm">Based on calculated impact energy and physics models</p>
           </div>
 
           <div className="bg-muted/50 p-4 rounded-lg space-y-2">
@@ -88,13 +103,13 @@ export function ImpactResults({ params, impactPoint }: ImpactResultsProps) {
               Magnitude {seismicMagnitude.toFixed(1)} earthquake
             </p>
             <p className="opacity-60">
-              {seismicMagnitude < 5 
-                ? 'Detectable by instruments' 
-                : seismicMagnitude < 6 
-                ? 'Minor damage near impact' 
-                : seismicMagnitude < 7 
-                ? 'Serious damage in nearby areas' 
-                : 'Major devastation across region'}
+              {seismicMagnitude < 5
+                ? 'Detectable by instruments'
+                : seismicMagnitude < 6
+                  ? 'Minor damage near impact'
+                  : seismicMagnitude < 7
+                    ? 'Serious damage in nearby areas'
+                    : 'Major devastation across region'}
             </p>
           </div>
 
@@ -119,11 +134,11 @@ export function ImpactResults({ params, impactPoint }: ImpactResultsProps) {
               <h3>Atmospheric Effects</h3>
             </div>
             <p className="opacity-80">
-              {energyMegatons < 1 
-                ? 'Minimal atmospheric disturbance' 
-                : energyMegatons < 100 
-                ? 'Dust and debris in local atmosphere' 
-                : 'Global atmospheric dust, potential climate effects'}
+              {energyMegatons < 1
+                ? 'Minimal atmospheric disturbance'
+                : energyMegatons < 100
+                  ? 'Dust and debris in local atmosphere'
+                  : 'Global atmospheric dust, potential climate effects'}
             </p>
           </div>
 
@@ -132,7 +147,7 @@ export function ImpactResults({ params, impactPoint }: ImpactResultsProps) {
               <span className="opacity-60">Impact Zone:</span> {impactPoint[1].toFixed(2)}°N, {impactPoint[0].toFixed(2)}°E
             </p>
             <p className="opacity-60 mt-1">
-              Devastation radius: ~{(craterDiameter * 2 / 1000).toFixed(1)} km
+              Impact radius (map): ~{craterDiameterKm.toFixed(1)} km
             </p>
           </div>
         </div>
