@@ -5,9 +5,11 @@ import { feature } from 'topojson-client';
 interface WorldMapProps {
   onMapClick?: (coordinates: [number, number]) => void;
   impactPoint?: [number, number] | null;
+  impactRadiusKm?: number; // fallback: severe ring
+  impactRingsKm?: { severe: number; moderate: number; light: number; thermal: number };
 }
 
-export function WorldMap({ onMapClick, impactPoint }: WorldMapProps) {
+export function WorldMap({ onMapClick, impactPoint, impactRadiusKm, impactRingsKm }: WorldMapProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
@@ -63,8 +65,8 @@ export function WorldMap({ onMapClick, impactPoint }: WorldMapProps) {
     // Add graticules (grid lines)
     const graticule = d3.geoGraticule();
     g.append('path')
-      .datum(graticule)
-      .attr('d', path)
+      .datum(graticule())
+      .attr('d', (d: any) => path(d) as string)
       .attr('fill', 'none')
       .attr('stroke', '#334155')
       .attr('stroke-width', 0.5)
@@ -74,33 +76,33 @@ export function WorldMap({ onMapClick, impactPoint }: WorldMapProps) {
     fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
       .then(response => response.json())
       .then((world: any) => {
-        const countries = feature(world, world.objects.countries);
+        const countries = feature(world, world.objects.countries) as unknown as GeoJSON.FeatureCollection;
 
         // Draw countries
         g.append('g')
           .selectAll('path')
-          .data(countries.features)
+          .data((countries as any).features)
           .enter()
           .append('path')
-          .attr('d', path)
+          .attr('d', (d: any) => path(d) as string)
           .attr('fill', '#1e293b')
           .attr('stroke', '#475569')
           .attr('stroke-width', 0.5)
           .attr('class', 'country')
           .style('cursor', 'pointer')
-          .on('mouseover', function() {
+          .on('mouseover', function () {
             d3.select(this)
               .attr('fill', '#334155')
               .attr('stroke', '#64748b')
               .attr('stroke-width', 1);
           })
-          .on('mouseout', function() {
+          .on('mouseout', function () {
             d3.select(this)
               .attr('fill', '#1e293b')
               .attr('stroke', '#475569')
               .attr('stroke-width', 0.5);
           })
-          .on('click', function(event, d: any) {
+          .on('click', function (event) {
             const [x, y] = d3.pointer(event, this);
             const coords = projection.invert?.([x, y]);
             if (coords && onMapClick) {
@@ -108,10 +110,43 @@ export function WorldMap({ onMapClick, impactPoint }: WorldMapProps) {
             }
           });
 
-        // Draw impact point if it exists
+        // Draw impact point and optional impact area if present
         if (impactPoint) {
           const coords = projection(impactPoint);
           if (coords) {
+            // Draw multi-ring impact areas if provided; otherwise fallback to single radius
+            const rings = impactRingsKm ?? (impactRadiusKm ? { severe: impactRadiusKm, moderate: 0, light: 0, thermal: 0 } : undefined);
+            const earthRadiusKm = 6371; // mean Earth radius
+            if (rings) {
+              const drawRing = (km: number, fill: string, stroke: string, opacity: number, label?: string) => {
+                if (!km || km <= 0) return;
+                const angularRadiusDeg = (km / earthRadiusKm) * (180 / Math.PI);
+                const circle = d3.geoCircle().center(impactPoint).radius(angularRadiusDeg)();
+                g.append('path')
+                  .datum(circle)
+                  .attr('d', (d: any) => path(d) as string)
+                  .attr('fill', fill)
+                  .attr('opacity', opacity)
+                  .attr('stroke', stroke)
+                  .attr('stroke-width', 1.2)
+                  .attr('stroke-dasharray', '4,4');
+                if (label) {
+                  g.append('text')
+                    .attr('x', coords[0] + 8)
+                    .attr('y', coords[1] - 8)
+                    .attr('fill', stroke)
+                    .style('font-size', '12px')
+                    .style('font-family', 'ui-sans-serif, system-ui')
+                    .text(label);
+                }
+              };
+
+              drawRing(rings.thermal, '#fde68a', '#f59e0b', 0.08);
+              drawRing(rings.light, '#fed7aa', '#fb923c', 0.10);
+              drawRing(rings.moderate, '#fca5a5', '#f87171', 0.14);
+              drawRing(rings.severe, '#ef4444', '#dc2626', 0.18, `${(rings.severe).toFixed(1)} km`);
+            }
+
             // Outer pulse circle
             g.append('circle')
               .attr('cx', coords[0])
@@ -136,24 +171,24 @@ export function WorldMap({ onMapClick, impactPoint }: WorldMapProps) {
                   .on('end', repeat);
               });
 
-            // Impact zone circle
+            // Impact core marker
             g.append('circle')
               .attr('cx', coords[0])
               .attr('cy', coords[1])
-              .attr('r', 20)
+              .attr('r', 4)
               .attr('fill', '#ef4444')
-              .attr('opacity', 0.4)
+              .attr('opacity', 0.9)
               .attr('stroke', '#dc2626')
-              .attr('stroke-width', 2);
+              .attr('stroke-width', 1.5);
 
             // Center point
             g.append('circle')
               .attr('cx', coords[0])
               .attr('cy', coords[1])
-              .attr('r', 4)
+              .attr('r', 2)
               .attr('fill', '#fef2f2')
               .attr('stroke', '#991b1b')
-              .attr('stroke-width', 2);
+              .attr('stroke-width', 1);
 
             // Crosshair
             g.append('line')
@@ -177,7 +212,7 @@ export function WorldMap({ onMapClick, impactPoint }: WorldMapProps) {
       .catch(error => console.error('Error loading world map:', error));
 
     // Click handler on ocean
-    svg.on('click', function(event) {
+    svg.on('click', function (event) {
       if (event.target === this || event.target.tagName === 'rect') {
         const [x, y] = d3.pointer(event);
         const coords = projection.invert?.([x, y]);
@@ -187,7 +222,7 @@ export function WorldMap({ onMapClick, impactPoint }: WorldMapProps) {
       }
     });
 
-  }, [dimensions, impactPoint, onMapClick]);
+  }, [dimensions, impactPoint, onMapClick, impactRadiusKm]);
 
   return (
     <svg

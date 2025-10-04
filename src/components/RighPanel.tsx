@@ -8,6 +8,7 @@ import { NASAAsteroid } from "../types/nasa";
 import { Button } from "./ui/button";
 import { ChevronsUpDown } from "lucide-react";
 import { AsteroidParams } from '../types/AsteroidTypes';
+import { ImpactApiResult } from '../utils/Api';
 
 interface RightPanelProps {
   asteroids: NASAAsteroid[];
@@ -16,8 +17,9 @@ interface RightPanelProps {
   impactPoint: any;
   handleSimulate: (params: AsteroidParams) => void;
   simulationResults?: {
-    params: any;
-    impactPoint: any;
+    params: AsteroidParams;
+    impactPoint: [number, number];
+    api?: ImpactApiResult;
   };
   onClearSelection?: () => void;
 }
@@ -105,10 +107,10 @@ export function RightPanel({
                     impactPoint={impactPoint}
                   />
 
-                  {simulationResults && (
+                  {simulationResults?.api && (
                     <ImpactResults
-                      params={simulationResults.params}
                       impactPoint={simulationResults.impactPoint}
+                      results={simulationResults.api}
                     />
                   )}
                 </div>

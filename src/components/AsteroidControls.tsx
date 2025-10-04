@@ -9,16 +9,23 @@ interface AsteroidControlsProps {
 }
 
 export function AsteroidControls({ onSimulate, impactPoint }: AsteroidControlsProps) {
-  const [diameter, setDiameter] = useState(100);
-  const [velocity, setVelocity] = useState(20);
-  const [angle, setAngle] = useState(45);
-  const [density, setDensity] = useState(3000);
+  const [diameter, setDiameter] = useState([100]);
+  const [velocity, setVelocity] = useState([20]);
+  const [density, setDensity] = useState([3000]);
   const [activeTab, setActiveTab] = useState<'asteroid' | 'impact' | 'mitigation'>('asteroid');
 
-  const handleSimulateClick = () => onSimulate({ diameter, velocity, angle, density });
+  const handleSimulate = () => {
+    const params = {
+      diameter: diameter[0],
+      velocity: velocity[0],
+      density: density[0],
+    } as const;
+    onSimulate(params);
+  };
 
-  const mass = (4/3) * Math.PI * Math.pow(diameter/2, 3) * density;
-  const energyJoules = 0.5 * mass * Math.pow(velocity*1000, 2);
+  // Calculate impact energy (simplified)
+  const mass = (4 / 3) * Math.PI * Math.pow(diameter[0] / 2, 3) * density[0];
+  const energyJoules = 0.5 * mass * Math.pow(velocity[0] * 1000, 2);
   const energyMegatons = energyJoules / (4.184 * Math.pow(10, 15));
 
   const tabs = [
@@ -55,7 +62,6 @@ export function AsteroidControls({ onSimulate, impactPoint }: AsteroidControlsPr
             {[
               { label: 'Diameter (m)', value: diameter, setter: setDiameter, min: 10, max: 1000, step: 10 },
               { label: 'Velocity (km/s)', value: velocity, setter: setVelocity, min: 5, max: 70, step: 1 },
-              { label: 'Impact Angle (°)', value: angle, setter: setAngle, min: 15, max: 90, step: 5 },
               { label: 'Density (kg/m³)', value: density, setter: setDensity, min: 1000, max: 8000, step: 100 },
             ].map((item, idx) => (
               <div className="ac-slider-group" key={idx}>
@@ -65,8 +71,8 @@ export function AsteroidControls({ onSimulate, impactPoint }: AsteroidControlsPr
                   min={item.min}
                   max={item.max}
                   step={item.step}
-                  value={item.value}
-                  onChange={e => item.setter(Number(e.target.value))}
+                  value={item.value[0]}
+                  onChange={e => item.setter([Number(e.target.value)])}
                   className="ac-slider"
                 />
               </div>
@@ -107,7 +113,7 @@ export function AsteroidControls({ onSimulate, impactPoint }: AsteroidControlsPr
       </div>
 
       <button
-        onClick={handleSimulateClick}
+        onClick={handleSimulate}
         disabled={!impactPoint}
         className={`ac-simulate-btn ${!impactPoint ? 'disabled' : ''}`}
       >
@@ -116,3 +122,6 @@ export function AsteroidControls({ onSimulate, impactPoint }: AsteroidControlsPr
     </div>
   );
 }
+
+export type { AsteroidParams };
+
