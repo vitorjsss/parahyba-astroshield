@@ -1,3 +1,4 @@
+/// <reference path="../types/three-fiber.d.ts" />
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree, ThreeEvent } from '@react-three/fiber';
 import { OrbitControls, Line, Html } from '@react-three/drei';
@@ -13,9 +14,9 @@ interface Globe3DProps {
   autoRotate?: boolean;
   controlsRef?: React.MutableRefObject<any>;
   focusedAsteroid?: NASAAsteroid | null;
+  onSimulateImpact?: (asteroid: NASAAsteroid) => void;
 }
 
-// Camera controller for smooth transitions
 function CameraController({
   focusedAsteroid,
   asteroids,
@@ -51,12 +52,12 @@ function CameraController({
           Math.sin(angle) * distance
         );
 
-        // Calculate camera position (closer to asteroid for better view)
+        // Calculate camera position (moderately close to asteroid for better view)
         const diameter = focusedAsteroid.estimated_diameter.meters.estimated_diameter_min;
         const size = Math.max(0.02, Math.min(0.15, diameter / 1000));
 
-        // Position camera at a good distance from the asteroid
-        const cameraDistance = Math.max(0.3, size * 4);
+        // Position camera at a comfortable distance from the asteroid (increased distance)
+        const cameraDistance = Math.max(1.2, size * 12);
         const offset = asteroidPos.clone().normalize().multiplyScalar(cameraDistance);
         targetPosition.current.copy(asteroidPos).add(offset);
         targetLookAt.current.copy(asteroidPos);
@@ -234,14 +235,17 @@ function Asteroid({
   index,
   onClick,
   isSelected,
-  isFocused
+  isFocused,
+  onSimulateImpact
 }: {
   asteroid: NASAAsteroid;
   index: number;
   onClick: () => void;
   isSelected: boolean;
   isFocused?: boolean;
+  onSimulateImpact?: (a: NASAAsteroid) => void;
 }) {
+  // ...existing code...
   const asteroidRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
   const spriteRef = useRef<THREE.Sprite>(null);
@@ -401,22 +405,8 @@ function Asteroid({
             <sphereGeometry args={[size, 16, 16]} />
             <meshStandardMaterial
               map={asteroidTexture}
-              color={color}
-              emissive={color}
-              emissiveIntensity={isSelected || hovered ? 0.5 : 0.2}
               roughness={0.9}
               metalness={0.1}
-            />
-          </mesh>
-
-          {/* Outer glow rim for better visibility */}
-          <mesh position={position}>
-            <sphereGeometry args={[size * 1.1, 16, 16]} />
-            <meshBasicMaterial
-              color={color}
-              transparent
-              opacity={isSelected || hovered ? 0.3 : 0.15}
-              side={THREE.BackSide}
             />
           </mesh>
         </>
@@ -449,40 +439,9 @@ function Asteroid({
         </sprite>
       )}
 
-      {/* Selection ring */}
-      {isSelected && (
-        <>
-          <mesh position={position} rotation={[Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[size * 1.5, size * 2, 32]} />
-            <meshBasicMaterial color={color} side={THREE.DoubleSide} transparent opacity={0.5} />
-          </mesh>
-
-          {/* Pulsing outer ring */}
-          <mesh position={position} rotation={[Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[size * 2.5, size * 3, 32]} />
-            <meshBasicMaterial color={color} side={THREE.DoubleSide} transparent opacity={0.2} />
-          </mesh>
-
-          {/* Particle effect */}
-          <AsteroidParticles position={position} color={color} />
-
-          {/* Glow sphere */}
-          <mesh ref={glowRef} position={position}>
-            <sphereGeometry args={[size * 2, 16, 16]} />
-            <meshBasicMaterial color={color} transparent opacity={isFocused ? 0.2 : 0.1} />
-          </mesh>
-        </>
-      )}
-
       {/* Extra visual effects for focused asteroid */}
       {isFocused && (
         <>
-          {/* Larger pulsing ring */}
-          <mesh position={position} rotation={[Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[size * 4, size * 4.5, 32]} />
-            <meshBasicMaterial color={color} side={THREE.DoubleSide} transparent opacity={0.15} />
-          </mesh>
-
           {/* Direction indicator lines */}
           <Line
             points={[
@@ -523,60 +482,6 @@ function Asteroid({
                 Hazardous
               </Badge>
             )}
-          </div>
-        </Html>
-      )}
-
-      {/* Selected asteroid detailed info */}
-      {isSelected && (
-        <Html
-          position={[position[0], position[1] + size + 0.5, position[2]]}
-          center
-          distanceFactor={10}
-          style={{ pointerEvents: 'none' }}
-        >
-          <div className="bg-card/95 backdrop-blur-sm border-2 border-primary/50 rounded-lg px-4 py-3 shadow-xl min-w-[280px]">
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <p className="font-medium mb-0.5">{asteroid.name}</p>
-                <p className="opacity-60">ID: {asteroid.id}</p>
-              </div>
-              {asteroid.is_potentially_hazardous_asteroid && (
-                <Badge variant="destructive" className="text-xs">
-                  <AlertTriangle className="w-3 h-3 mr-1" />
-                  PHA
-                </Badge>
-              )}
-            </div>
-
-            <div className="space-y-2 pt-2 border-t border-border/30">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <p className="opacity-60">Diameter</p>
-                  <p className="font-medium">{diameter.toFixed(0)}m</p>
-                </div>
-                <div>
-                  <p className="opacity-60">Velocity</p>
-                  <p className="font-medium">{velocity.toFixed(2)} km/s</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <p className="opacity-60">Miss Dist.</p>
-                  <p className="font-medium">{parseFloat(closeApproach.miss_distance.lunar).toFixed(2)} LD</p>
-                </div>
-                <div>
-                  <p className="opacity-60">Energy</p>
-                  <p className="font-medium">{energyMegatons.toFixed(2)} MT</p>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-border/30">
-                <p className="opacity-60">Approach Date</p>
-                <p className="font-medium">{closeApproach.close_approach_date}</p>
-              </div>
-            </div>
           </div>
         </Html>
       )}
@@ -668,7 +573,7 @@ function Stars() {
   );
 }
 
-function Scene({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, controlsRef, focusedAsteroid }: Globe3DProps) {
+function Scene({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, controlsRef, focusedAsteroid, onSimulateImpact }: Globe3DProps) {
   return (
     <>
       {/* Camera controller for smooth transitions */}
@@ -708,7 +613,7 @@ function Scene({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, contr
       {/* Earth */}
       <Earth />
 
-      {/* Asteroids */}
+      {/* Asteroids - hide during impact animation */}
       {asteroids.map((asteroid, index) => (
         <Asteroid
           key={asteroid.id}
@@ -717,6 +622,7 @@ function Scene({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, contr
           onClick={() => onAsteroidClick?.(asteroid)}
           isSelected={selectedAsteroid?.id === asteroid.id}
           isFocused={focusedAsteroid?.id === asteroid.id}
+          onSimulateImpact={onSimulateImpact}
         />
       ))}
 
@@ -735,7 +641,7 @@ function Scene({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, contr
   );
 }
 
-export function Globe3D({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, controlsRef, focusedAsteroid }: Globe3DProps) {
+export function Globe3D({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, controlsRef, focusedAsteroid, onSimulateImpact }: Globe3DProps) {
   return (
     <div className="w-full h-full bg-gradient-to-b from-[#000000] via-[#0a0e1a] to-[#1a1f35]">
       <Canvas
@@ -757,6 +663,7 @@ export function Globe3D({ asteroids, onAsteroidClick, selectedAsteroid, autoRota
           autoRotate={autoRotate}
           controlsRef={controlsRef}
           focusedAsteroid={focusedAsteroid}
+          onSimulateImpact={onSimulateImpact}
         />
       </Canvas>
     </div>
