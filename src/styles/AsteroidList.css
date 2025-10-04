@@ -1,0 +1,191 @@
+.asteroid-list-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 80vh; /* 🔹 altura máxima visível */
+  overflow: hidden;
+  font-family: "Inter", sans-serif;
+  color: #222;
+}
+
+/* Cabeçalho */
+.asteroid-list-header {
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+.asteroid-list-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.asteroid-list-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.asteroid-list-badge {
+  background: #eee;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.asteroid-list-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+/* 🔹 Área scrollável */
+.asteroid-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Scrollbar personalizada */
+.asteroid-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.asteroid-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+/* Itens */
+.asteroid-item {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fafafa;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.asteroid-item:hover {
+  background: #f1f1f1;
+  border-color: #ccc;
+}
+
+.asteroid-item.selected {
+  background: #e6f0ff;
+  border-color: #4a90e2;
+}
+
+/* Header interno */
+.asteroid-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 8px;
+}
+
+.asteroid-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.asteroid-name {
+  font-weight: 600;
+}
+
+.asteroid-id {
+  font-size: 0.85rem;
+  opacity: 0.6;
+}
+
+.asteroid-badges {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.badge-danger {
+  display: flex;
+  align-items: center;
+  background: #fdecea;
+  color: #b3261e;
+  border: 1px solid #f5c2c0;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-normal {
+  background: #eef2ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Ícones */
+.icon {
+  width: 14px;
+  height: 14px;
+  opacity: 0.6;
+  margin-right: 4px;
+}
+
+/* Detalhes */
+.asteroid-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.detail-row strong {
+  font-weight: 600;
+  color: #000;
+}
+
+/* Distância */
+.miss-distance {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.miss-values {
+  text-align: right;
+}
+
+.miss-values .ld {
+  opacity: 0.6;
+  font-size: 0.85rem;
+}
+
+/* Sem dados */
+.no-data {
+  text-align: center;
+  opacity: 0.6;
+  padding: 40px 0;
+  font-size: 0.9rem;
+}

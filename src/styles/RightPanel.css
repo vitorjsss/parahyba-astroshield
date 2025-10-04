@@ -1,6 +1,6 @@
 .right-panel {
   position: absolute;
-  top: 84px; /* <-- igual ao .asteroid-panel */
+  top: 84px;
   right: 20px;
   width: 360px;
   max-height: 80vh;
@@ -16,14 +16,54 @@
 }
 
 .right-panel.collapsed {
-  max-height: 50px;
+  max-height: 70px; /* Aumentado de 50px → 70px */
 }
 
+/* === Botão de expandir/colapsar (mantido moderno) === */
 .collapse-header {
-  padding: 8px;
+  padding: 12px; /* ligeiro aumento para centralizar melhor */
   border-bottom: 1px solid #eee;
+  background: #fafafa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
+.collapse-header button {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: #fff;
+  color: #111;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.collapse-header button:hover {
+  background: #f3f3f3;
+  border-color: #bbb;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.collapse-header button svg {
+  transition: transform 0.3s ease;
+}
+
+.right-panel.collapsed .collapse-header button svg {
+  transform: rotate(180deg);
+}
+
+/* === Tabs === */
 .tab-header {
   display: flex;
   border-bottom: 1px solid #eee;
@@ -49,6 +89,7 @@
   background: #f5f5f5;
 }
 
+/* === Conteúdo === */
 .tab-content {
   flex: 1;
   display: flex;
