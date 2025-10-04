@@ -1,6 +1,6 @@
 import { useRef, useMemo, useState, useEffect } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Sphere, Line, Html, Sprite } from '@react-three/drei';
+import { Canvas, useFrame, useThree, ThreeEvent } from '@react-three/fiber';
+import { OrbitControls, Sphere, Line, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { NASAAsteroid } from '../types/nasa';
 import { Badge } from './ui/badge';
@@ -277,6 +277,13 @@ function Asteroid({
   const missDistanceKm = parseFloat(closeApproach.miss_distance.kilometers);
   const velocity = parseFloat(closeApproach.relative_velocity.kilometers_per_second);
 
+  // Color based on hazard level
+  const color = asteroid.is_potentially_hazardous_asteroid 
+    ? '#ef4444' 
+    : asteroid.is_sentry_object 
+    ? '#f97316'
+    : '#60a5fa';
+
   // Load asteroid texture
   const asteroidTexture = useMemo(() => {
     const textureLoader = new THREE.TextureLoader();
@@ -330,13 +337,6 @@ function Asteroid({
   // Asteroid size based on diameter
   const diameter = asteroid.estimated_diameter.meters.estimated_diameter_min;
   const size = Math.max(0.02, Math.min(0.15, diameter / 1000));
-
-  // Color based on hazard level
-  const color = asteroid.is_potentially_hazardous_asteroid 
-    ? '#ef4444' 
-    : asteroid.is_sentry_object 
-    ? '#f97316'
-    : '#60a5fa';
 
   // Create trajectory path
   const trajectoryPoints = useMemo(() => {
@@ -408,11 +408,11 @@ function Asteroid({
           <mesh
             ref={asteroidRef}
             position={position}
-            onClick={(e) => {
+            onClick={(e: ThreeEvent<MouseEvent>) => {
               e.stopPropagation();
               onClick();
             }}
-            onPointerOver={(e) => {
+            onPointerOver={(e: ThreeEvent<PointerEvent>) => {
               e.stopPropagation();
               setHovered(true);
               document.body.style.cursor = 'pointer';
@@ -450,11 +450,11 @@ function Asteroid({
           ref={spriteRef}
           position={position}
           scale={[size * 4, size * 4, 1]}
-          onClick={(e) => {
+          onClick={(e: ThreeEvent<MouseEvent>) => {
             e.stopPropagation();
             onClick();
           }}
-          onPointerOver={(e) => {
+          onPointerOver={(e: ThreeEvent<PointerEvent>) => {
             e.stopPropagation();
             setHovered(true);
             document.body.style.cursor = 'pointer';
