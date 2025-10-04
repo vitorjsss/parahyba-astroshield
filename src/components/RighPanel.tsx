@@ -32,7 +32,7 @@ export function RightPanel({
   onClearSelection,
 }: RightPanelProps) {
   const [activeTab, setActiveTab] = useState<"tracking" | "simulation">("tracking");
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   return (
     <div className={`right-panel ${collapsed ? "collapsed" : ""}`}>

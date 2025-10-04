@@ -276,18 +276,6 @@ export default function App() {
               <Download className="w-4 h-4 mr-2" />
               {loading ? "Carregando..." : "Carregar Dados Reais NASA"}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="ml-2"
-            >
-              {sidebarOpen ? (
-                <PanelRightClose className="w-4 h-4" />
-              ) : (
-                <PanelRightOpen className="w-4 h-4" />
-              )}
-            </Button>
           </div>
         </div>
       </header>
