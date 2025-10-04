@@ -14,7 +14,8 @@ import { Button } from './components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
 import { Globe2, Map, Satellite, Download, Focus, PanelRightOpen, PanelRightClose } from 'lucide-react';
 import { NASAAsteroid } from './types/nasa';
-import { generateMockNASAData, flattenNASAData } from './utils/mockNasaData';
+import { fetchRealNASAData, getAllAsteroidsFromRealData } from './utils/realNasaApi';
+import { AsteroidPanel } from './components/AsteroidPanel';
 
 type ViewMode = '2d' | '3d' | 'animation';
 
@@ -30,6 +31,8 @@ export default function App() {
   const [asteroids, setAsteroids] = useState<NASAAsteroid[]>([]);
   const [selectedAsteroid, setSelectedAsteroid] = useState<NASAAsteroid | null>(null);
   const [loading, setLoading] = useState(false);
+  const [apiKey, setApiKey] = useState<string>('fkVbPDt9JuPttB2wUmOCx6y2NqtdfiLrgWRECXCu'); // Para API key opcional
+  const [apiInfo, setApiInfo] = useState<{ message: string; remaining?: number } | null>(null);
 
   // 3D controls
   const [autoRotate, setAutoRotate] = useState(false);
@@ -65,14 +68,35 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [selectedAsteroid, focusedAsteroid]);
 
-  const loadNASAData = () => {
+  const loadNASAData = async () => {
     setLoading(true);
-    setTimeout(() => {
-      const mockData = generateMockNASAData();
-      const flattenedAsteroids = flattenNASAData(mockData);
-      setAsteroids(flattenedAsteroids);
+    setApiInfo(null);
+    try {
+      console.log('🚀 Carregando dados reais da NASA...');
+      const realData = await fetchRealNASAData(apiKey || undefined);
+      const realAsteroids = getAllAsteroidsFromRealData(realData);
+      setAsteroids(realAsteroids);
+      setApiInfo({
+        message: `✅ ${realAsteroids.length} asteroides reais carregados para hoje!`,
+        remaining: undefined
+      });
+      console.log(`✅ ${realAsteroids.length} asteroides reais carregados!`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      console.error('❌ Erro ao carregar dados reais:', error);
+      setApiInfo({
+        message: `❌ Erro: ${errorMessage}`
+      });
+
+      // Se for rate limit, sugere usar API key
+      if (errorMessage.includes('Rate limit') || errorMessage.includes('429')) {
+        alert(`⚠️ Rate limit da NASA API excedido!\n\nPara mais requisições, obtenha uma API key gratuita em:\nhttps://api.nasa.gov/\n\nCom a DEMO_KEY você tem até 1000 requisições por hora.`);
+      } else {
+        alert(`Erro ao carregar dados da NASA: ${errorMessage}\n\nVerifique sua conexão com a internet e tente novamente.`);
+      }
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   const hazardousCount = asteroids.filter(a => a.is_potentially_hazardous_asteroid).length;
@@ -205,7 +229,7 @@ export default function App() {
             </div>
             <Button variant="outline" size="sm" onClick={loadNASAData} disabled={loading}>
               <Download className="w-4 h-4 mr-2" />
-              {loading ? 'Loading...' : 'Load NEO Data'}
+              {loading ? 'Carregando...' : 'Carregar Dados Reais NASA'}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setSidebarOpen(!sidebarOpen)} className="ml-2">
               {sidebarOpen ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
@@ -254,6 +278,7 @@ export default function App() {
                 focusedAsteroid={focusedAsteroid}
                 onSimulateImpact={handleSimulateAsteroidImpactFor}
               />
+
               <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">
                 {focusedAsteroid ? (
                   <div className="flex items-center gap-2">
@@ -269,28 +294,19 @@ export default function App() {
                 )}
               </div>
 
-              {/* Controles e legendas roláveis no canto inferior esquerdo */}
-              <div className="absolute bottom-6 left-6 max-h-[calc(100vh-200px)] w-80 overflow-y-auto flex flex-col space-y-3 p-3 bg-card/90 rounded-lg backdrop-blur-sm border border-border/50 shadow-lg">
-                <div className="flex-shrink-0">
-                  <AsteroidLegend totalAsteroids={asteroids.length} hazardousCount={hazardousCount} sentryCount={sentryCount} />
-                </div>
-                {asteroids.length > 0 && (
-                  <div className="flex-shrink-0">
-                    <AsteroidStats asteroids={asteroids} />
-                  </div>
-                )}
-                <div className="flex-shrink-0">
-                  <Globe3DControls
-                    autoRotate={autoRotate}
-                    onAutoRotateChange={setAutoRotate}
-                    onResetView={handleResetView}
-                    onFocusAsteroid={handleFocusAsteroid}
-                    onReturnToEarth={handleReturnToEarth}
-                    selectedAsteroid={selectedAsteroid}
-                    isFocused={focusedAsteroid !== null}
-                  />
-                </div>
-              </div>
+              {/*chamar asteroid panel*/}
+              <AsteroidPanel
+                asteroids={asteroids}
+                hazardousCount={hazardousCount}
+                sentryCount={sentryCount}
+                autoRotate={autoRotate}
+                setAutoRotate={setAutoRotate}
+                handleResetView={handleResetView}
+                handleFocusAsteroid={handleFocusAsteroid}
+                handleReturnToEarth={handleReturnToEarth}
+                selectedAsteroid={selectedAsteroid}
+                focusedAsteroid={focusedAsteroid}
+              />
             </>
           )}
         </div>

@@ -1,0 +1,168 @@
+/* Painel externo */
+.asteroid-panel {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 320px;
+    max-height: 80vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    border: 1px solid #ccc;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    font-family: 'Inter', sans-serif;
+}
+
+/* Cards internos */
+.asteroid-card {
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 12px;
+    background: #fefefe;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.asteroid-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Cards específicos Globe3DControls */
+.asteroid-card-globe {
+    background: linear-gradient(135deg, #f9f9f9, #e0f7fa);
+    border: 1px solid #b2ebf2;
+}
+
+/* Botão de expandir/recolher */
+.card-toggle {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+    font-weight: 600;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: background 0.2s ease;
+}
+
+.card-toggle:hover {
+    background-color: rgba(0, 121, 107, 0.08);
+    border-radius: 6px;
+}
+
+.card-toggle span {
+    font-size: 14px;
+    color: #555;
+}
+
+/* Conteúdo expandido */
+.card-content {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 14px;
+    color: #333;
+}
+
+/* Layout interno de controles */
+.control-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.control-label {
+    font-weight: 500;
+    font-size: 13px;
+    color: #004d40;
+}
+
+/* Botões de ação */
+.control-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.control-buttons .btn {
+    padding: 6px 8px;
+    border: 1px solid #00796b;
+    border-radius: 6px;
+    background-color: #b2dfdb;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.control-buttons .btn:hover {
+    background-color: #80cbc4;
+    transform: scale(1.03);
+}
+
+/* Informações de mouse e teclado */
+.control-info {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #004d40;
+}
+
+.control-info ul {
+    padding-left: 16px;
+    margin: 4px 0 8px 0;
+    list-style-type: disc;
+}
+
+.control-info p {
+    margin: 6px 0 2px 0;
+    font-weight: 600;
+}
+
+.safe {
+    color: #28a745;
+    /* verde */
+    font-weight: 600;
+}
+
+.sentry {
+    color: #ffc107;
+    /* amarelo/laranja */
+    font-weight: 600;
+}
+
+.hazardous {
+    color: #dc3545;
+    /* vermelho */
+    font-weight: 600;
+}
+
+.note-text {
+    font-size: 13px;
+    color: #555;
+    margin-top: 6px;
+}
+
+.closest {
+    color: #17a2b8;
+    /* azul claro */
+    font-weight: 600;
+}
+
+.largest {
+    color: #6f42c1;
+    /* roxo */
+    font-weight: 600;
+}
+
+.hazardous {
+    color: #dc3545;
+    /* vermelho */
+    font-weight: 600;
+}

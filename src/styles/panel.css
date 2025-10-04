@@ -1,0 +1,99 @@
+.panel {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    padding: 14px 16px;
+    transition: box-shadow 0.2s ease, transform 0.1s ease;
+    width: 100%;
+}
+
+.panel:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}
+
+.panel button {
+    all: unset;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    cursor: pointer;
+    margin-bottom: 4px;
+}
+
+.panel h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+
+.panel span {
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.panel-content {
+    margin-top: 10px;
+    display: grid;
+    gap: 10px;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.panel-section {
+    border-top: 1px solid #f3f4f6;
+    padding-top: 10px;
+    margin-top: 6px;
+}
+
+.panel p {
+    margin: 0;
+    line-height: 1.4;
+}
+
+.panel strong {
+    color: #111827;
+}
+
+.panel ul {
+    margin: 4px 0 0 14px;
+    padding: 0;
+}
+
+.panel li {
+    list-style: none;
+    color: #4b5563;
+    font-size: 0.85rem;
+}
+
+.panel input[type="checkbox"] {
+    transform: scale(1.2);
+    cursor: pointer;
+    accent-color: #2563eb;
+}
+
+.panel button.action {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #111827;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    width: 100%;
+    text-align: center;
+}
+
+.panel button.action:hover {
+    background-color: #f3f4f6;
+    transform: translateY(-1px);
+}
+
+.panel button.action:active {
+    transform: translateY(0);
+}

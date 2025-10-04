@@ -5,6 +5,7 @@ import { OrbitControls, Line, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { NASAAsteroid } from '../types/nasa';
 import { Badge } from './ui/badge';
+import { Button } from './ui/button';
 import { AlertTriangle, TrendingUp, Zap } from 'lucide-react';
 
 interface Globe3DProps {
@@ -643,7 +644,7 @@ function Scene({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, contr
 
 export function Globe3D({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, controlsRef, focusedAsteroid, onSimulateImpact }: Globe3DProps) {
   return (
-    <div className="w-full h-full bg-gradient-to-b from-[#000000] via-[#0a0e1a] to-[#1a1f35]">
+    <div className="w-full h-full bg-gradient-to-b from-[#000000] via-[#0a0e1a] to-[#1a1f35] relative">
       <Canvas
         camera={{ position: [0, 0, 6], fov: 60 }}
         gl={{
@@ -666,6 +667,57 @@ export function Globe3D({ asteroids, onAsteroidClick, selectedAsteroid, autoRota
           onSimulateImpact={onSimulateImpact}
         />
       </Canvas>
+
+      {/* Botão de Simular Impacto - aparece quando um asteroide é selecionado */}
+      {selectedAsteroid && onSimulateImpact && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '24px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 10,
+          }}
+        >
+          <button
+            onClick={() => onSimulateImpact(selectedAsteroid)}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 24px',
+              backgroundColor: '#d0a3a218',
+              color: '#fff',
+              borderRadius: '10px',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor = '#500c0bb8')
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor = '#d0a3a218')
+            }
+          >
+            <img
+              src="/src/assets/asteroid.png"
+              alt="Asteroid"
+              style={{
+                width: '48px',
+                height: '48px',
+                filter: 'brightness(0) saturate(100%) invert(13%) sepia(100%) saturate(7207%) hue-rotate(358deg) brightness(98%) contrast(118%)', // Filtro para vermelho mais intenso
+                objectFit: 'contain'
+              }}
+            />
+            Simulate
+            <br />
+            {selectedAsteroid.name}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
