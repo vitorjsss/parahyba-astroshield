@@ -1,26 +1,41 @@
-import { useState, useEffect, useRef } from 'react';
-import { WorldMap } from './components/WorldMap';
-import { Globe3D } from './components/Globe3D';
-import { ImpactAnimationScreen } from './components/ImpactAnimationScreen';
-import { AsteroidControls, AsteroidParams } from './components/AsteroidControls';
-import { ImpactResults } from './components/ImpactResults';
-import { AsteroidList } from './components/AsteroidList';
-import { AsteroidDetails } from './components/AsteroidDetails';
-import { AsteroidLegend } from './components/AsteroidLegend';
-import { AsteroidStats } from './components/AsteroidStats';
-import { Globe3DControls } from './components/Globe3DControls';
-import { Badge } from './components/ui/badge';
-import { Button } from './components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
-import { Globe2, Map, Satellite, Download, Focus, PanelRightOpen, PanelRightClose } from 'lucide-react';
-import { NASAAsteroid } from './types/nasa';
-import { fetchRealNASAData, getAllAsteroidsFromRealData } from './utils/realNasaApi';
-import { AsteroidPanel } from './components/AsteroidPanel';
+import { useState, useEffect, useRef } from "react";
+import { WorldMap } from "./components/WorldMap";
+import { Globe3D } from "./components/Globe3D";
+import { ImpactAnimationScreen } from "./components/ImpactAnimationScreen";
+import {
+  AsteroidControls,
+  AsteroidParams,
+} from "./components/AsteroidControls";
+import { ImpactResults } from "./components/ImpactResults";
+import { AsteroidList } from "./components/AsteroidList";
+import { AsteroidDetails } from "./components/AsteroidDetails";
+import { AsteroidLegend } from "./components/AsteroidLegend";
+import { AsteroidStats } from "./components/AsteroidStats";
+import { Globe3DControls } from "./components/Globe3DControls";
+import { Badge } from "./components/ui/badge";
+import { Button } from "./components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
+import {
+  Globe2,
+  Map,
+  Satellite,
+  Download,
+  Focus,
+  PanelRightOpen,
+  PanelRightClose,
+} from "lucide-react";
+import { NASAAsteroid } from "./types/nasa";
+import {
+  fetchRealNASAData,
+  getAllAsteroidsFromRealData,
+} from "./utils/realNasaApi";
+import { AsteroidPanel } from "./components/AsteroidPanel";
+import { cn } from "./components/ui/utils";
 
-type ViewMode = '2d' | '3d' | 'animation';
+type ViewMode = "2d" | "3d" | "animation";
 
 export default function App() {
-  const [viewMode, setViewMode] = useState<ViewMode>('3d');
+  const [viewMode, setViewMode] = useState<ViewMode>("3d");
   const [impactPoint, setImpactPoint] = useState<[number, number] | null>(null);
   const [simulationResults, setSimulationResults] = useState<{
     params: AsteroidParams;
@@ -29,20 +44,30 @@ export default function App() {
 
   // NASA NEO data
   const [asteroids, setAsteroids] = useState<NASAAsteroid[]>([]);
-  const [selectedAsteroid, setSelectedAsteroid] = useState<NASAAsteroid | null>(null);
+  const [selectedAsteroid, setSelectedAsteroid] = useState<NASAAsteroid | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
-  const [apiKey, setApiKey] = useState<string>('fkVbPDt9JuPttB2wUmOCx6y2NqtdfiLrgWRECXCu'); // Para API key opcional
-  const [apiInfo, setApiInfo] = useState<{ message: string; remaining?: number } | null>(null);
+  const [apiKey, setApiKey] = useState<string>(
+    "fkVbPDt9JuPttB2wUmOCx6y2NqtdfiLrgWRECXCu"
+  ); // Para API key opcional
+  const [apiInfo, setApiInfo] = useState<{
+    message: string;
+    remaining?: number;
+  } | null>(null);
 
   // 3D controls
   const [autoRotate, setAutoRotate] = useState(false);
-  const [focusedAsteroid, setFocusedAsteroid] = useState<NASAAsteroid | null>(null);
+  const [focusedAsteroid, setFocusedAsteroid] = useState<NASAAsteroid | null>(
+    null
+  );
   const controlsRef = useRef<any>(null);
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Impact animation state - simplified to just the asteroid
-  const [showImpactAnimation, setShowImpactAnimation] = useState<NASAAsteroid | null>(null);
+  const [showImpactAnimation, setShowImpactAnimation] =
+    useState<NASAAsteroid | null>(null);
 
   // Load mock NASA data on mount
   useEffect(() => {
@@ -51,56 +76,63 @@ export default function App() {
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'f' || e.key === 'F') {
+      if (e.key === "f" || e.key === "F") {
         if (selectedAsteroid && !focusedAsteroid) handleFocusAsteroid();
       }
-      if (e.key === 'h' || e.key === 'H') {
+      if (e.key === "h" || e.key === "H") {
         if (focusedAsteroid) handleReturnToEarth();
       }
-      if (e.key === 'r' || e.key === 'R') handleResetView();
-      if (e.key === 'Escape') {
+      if (e.key === "r" || e.key === "R") handleResetView();
+      if (e.key === "Escape") {
         setSelectedAsteroid(null);
         setFocusedAsteroid(null);
       }
     };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
   }, [selectedAsteroid, focusedAsteroid]);
 
   const loadNASAData = async () => {
     setLoading(true);
     setApiInfo(null);
     try {
-      console.log('🚀 Carregando dados reais da NASA...');
+      console.log("🚀 Carregando dados reais da NASA...");
       const realData = await fetchRealNASAData(apiKey || undefined);
       const realAsteroids = getAllAsteroidsFromRealData(realData);
       setAsteroids(realAsteroids);
       setApiInfo({
         message: `✅ ${realAsteroids.length} asteroides reais carregados para hoje!`,
-        remaining: undefined
+        remaining: undefined,
       });
       console.log(`✅ ${realAsteroids.length} asteroides reais carregados!`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      console.error('❌ Erro ao carregar dados reais:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Erro desconhecido";
+      console.error("❌ Erro ao carregar dados reais:", error);
       setApiInfo({
-        message: `❌ Erro: ${errorMessage}`
+        message: `❌ Erro: ${errorMessage}`,
       });
 
       // Se for rate limit, sugere usar API key
-      if (errorMessage.includes('Rate limit') || errorMessage.includes('429')) {
-        alert(`⚠️ Rate limit da NASA API excedido!\n\nPara mais requisições, obtenha uma API key gratuita em:\nhttps://api.nasa.gov/\n\nCom a DEMO_KEY você tem até 1000 requisições por hora.`);
+      if (errorMessage.includes("Rate limit") || errorMessage.includes("429")) {
+        alert(
+          `⚠️ Rate limit da NASA API excedido!\n\nPara mais requisições, obtenha uma API key gratuita em:\nhttps://api.nasa.gov/\n\nCom a DEMO_KEY você tem até 1000 requisições por hora.`
+        );
       } else {
-        alert(`Erro ao carregar dados da NASA: ${errorMessage}\n\nVerifique sua conexão com a internet e tente novamente.`);
+        alert(
+          `Erro ao carregar dados da NASA: ${errorMessage}\n\nVerifique sua conexão com a internet e tente novamente.`
+        );
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const hazardousCount = asteroids.filter(a => a.is_potentially_hazardous_asteroid).length;
-  const sentryCount = asteroids.filter(a => a.is_sentry_object).length;
+  const hazardousCount = asteroids.filter(
+    (a) => a.is_potentially_hazardous_asteroid
+  ).length;
+  const sentryCount = asteroids.filter((a) => a.is_sentry_object).length;
 
   const handleMapClick = (coordinates: [number, number]) => {
     setImpactPoint(coordinates);
@@ -127,8 +159,11 @@ export default function App() {
   const handleSimulateAsteroidImpact = () => {
     if (selectedAsteroid) {
       const closeApproach = selectedAsteroid.close_approach_data[0];
-      const diameter = selectedAsteroid.estimated_diameter.meters.estimated_diameter_min;
-      const velocity = parseFloat(closeApproach.relative_velocity.kilometers_per_second);
+      const diameter =
+        selectedAsteroid.estimated_diameter.meters.estimated_diameter_min;
+      const velocity = parseFloat(
+        closeApproach.relative_velocity.kilometers_per_second
+      );
 
       // Set random impact point
       const randomLat = (Math.random() - 0.5) * 160;
@@ -147,7 +182,7 @@ export default function App() {
       });
 
       // Switch to 2D view to show impact
-      setViewMode('2d');
+      setViewMode("2d");
     }
   };
 
@@ -157,7 +192,7 @@ export default function App() {
     if (target) {
       // Switch to animation page and store the asteroid
       setShowImpactAnimation(target);
-      setViewMode('animation');
+      setViewMode("animation");
     }
   };
 
@@ -166,8 +201,11 @@ export default function App() {
     if (showImpactAnimation) {
       // After animation completes, switch to 2D view with results
       const closeApproach = showImpactAnimation.close_approach_data[0];
-      const diameter = showImpactAnimation.estimated_diameter.meters.estimated_diameter_min;
-      const velocity = parseFloat(closeApproach.relative_velocity.kilometers_per_second);
+      const diameter =
+        showImpactAnimation.estimated_diameter.meters.estimated_diameter_min;
+      const velocity = parseFloat(
+        closeApproach.relative_velocity.kilometers_per_second
+      );
 
       const randomLat = (Math.random() - 0.5) * 160;
       const randomLng = (Math.random() - 0.5) * 360;
@@ -187,9 +225,10 @@ export default function App() {
       setShowImpactAnimation(null);
 
       // Switch to 2D view to show detailed results
-      setViewMode('2d');
+      setViewMode("2d");
     }
-  }; const handleResetView = () => {
+  };
+  const handleResetView = () => {
     setFocusedAsteroid(null);
     if (controlsRef.current) controlsRef.current.reset();
   };
@@ -211,28 +250,42 @@ export default function App() {
             </Badge>
             <div className="flex gap-2">
               <Button
-                variant={viewMode === '2d' ? 'default' : 'outline'}
+                variant={viewMode === "2d" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setViewMode('2d')}
+                onClick={() => setViewMode("2d")}
               >
                 <Map className="w-4 h-4 mr-2" />
                 2D Map
               </Button>
               <Button
-                variant={viewMode === '3d' ? 'default' : 'outline'}
+                variant={viewMode === "3d" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setViewMode('3d')}
+                onClick={() => setViewMode("3d")}
               >
                 <Globe2 className="w-4 h-4 mr-2" />
                 3D Globe
               </Button>
             </div>
-            <Button variant="outline" size="sm" onClick={loadNASAData} disabled={loading}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadNASAData}
+              disabled={loading}
+            >
               <Download className="w-4 h-4 mr-2" />
-              {loading ? 'Carregando...' : 'Carregar Dados Reais NASA'}
+              {loading ? "Carregando..." : "Carregar Dados Reais NASA"}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setSidebarOpen(!sidebarOpen)} className="ml-2">
-              {sidebarOpen ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="ml-2"
+            >
+              {sidebarOpen ? (
+                <PanelRightClose className="w-4 h-4" />
+              ) : (
+                <PanelRightOpen className="w-4 h-4" />
+              )}
             </Button>
           </div>
         </div>
@@ -242,7 +295,7 @@ export default function App() {
       <div className="flex-1 flex overflow-hidden">
         {/* Visualization Area */}
         <div className="flex-1 relative">
-          {viewMode === 'animation' ? (
+          {viewMode === "animation" ? (
             // Impact Animation Page
             showImpactAnimation && (
               <ImpactAnimationScreen
@@ -250,12 +303,15 @@ export default function App() {
                 onComplete={handleAnimationComplete}
               />
             )
-          ) : viewMode === '2d' ? (
+          ) : viewMode === "2d" ? (
             <>
               <WorldMap onMapClick={handleMapClick} impactPoint={impactPoint} />
               {!impactPoint && (
                 <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">
-                  <p className="opacity-80">Click anywhere on the map to set the asteroid impact location</p>
+                  <p className="opacity-80">
+                    Click anywhere on the map to set the asteroid impact
+                    location
+                  </p>
                 </div>
               )}
               {impactPoint && (
@@ -279,17 +335,26 @@ export default function App() {
                 onSimulateImpact={handleSimulateAsteroidImpactFor}
               />
 
-              <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">
+              <div
+                className={cn(
+                  "absolute bottom-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg",
+                  focusedAsteroid && "top-6 bottom-0"
+                )}
+              >
                 {focusedAsteroid ? (
                   <div className="flex items-center gap-2">
                     <Focus className="w-4 h-4 text-primary" />
                     <p className="opacity-80">
-                      Focused on <span className="font-medium text-primary">{focusedAsteroid.name}</span>
+                      Focused on{" "}
+                      <span className="font-medium text-primary">
+                        {focusedAsteroid.name}
+                      </span>
                     </p>
                   </div>
                 ) : (
-                  <p className="opacity-80">
-                    Drag to rotate • Scroll to zoom • Click asteroids to view details
+                  <p className="opacity-80 ">
+                    Drag to rotate • Scroll to zoom • Click asteroids to view
+                    details
                   </p>
                 )}
               </div>
@@ -312,7 +377,7 @@ export default function App() {
         </div>
 
         {/* Side Panel - hidden during animation */}
-        {viewMode !== 'animation' && (
+        {viewMode !== "animation" && (
           <div className="w-96 border-l border-border/50 bg-muted/20 overflow-hidden flex flex-col">
             <Tabs defaultValue="tracking" className="flex-1 flex flex-col">
               <div className="border-b border-border/50 px-4 pt-4">
@@ -328,7 +393,10 @@ export default function App() {
                 </TabsList>
               </div>
 
-              <TabsContent value="tracking" className="flex-1 overflow-hidden mt-0">
+              <TabsContent
+                value="tracking"
+                className="flex-1 overflow-hidden mt-0"
+              >
                 <div className="h-full flex flex-col">
                   {selectedAsteroid ? (
                     <div className="flex-1 overflow-y-auto p-4">
@@ -358,7 +426,10 @@ export default function App() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="simulation" className="flex-1 overflow-y-auto mt-0">
+              <TabsContent
+                value="simulation"
+                className="flex-1 overflow-y-auto mt-0"
+              >
                 <div className="p-4 space-y-4">
                   <AsteroidControls
                     onSimulate={handleSimulate}
