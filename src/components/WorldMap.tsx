@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
-import * as d3 from 'd3';
-import { feature } from 'topojson-client';
+import { useEffect, useRef, useState } from "react";
+import * as d3 from "d3";
+import { feature } from "topojson-client";
+import { UsersIcon } from "lucide-react";
 
 interface WorldMapProps {
   onMapClick?: (coordinates: [number, number]) => void;
@@ -9,191 +10,270 @@ interface WorldMapProps {
 
 export function WorldMap({ onMapClick, impactPoint }: WorldMapProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [showPopLayer, setShowPopLayer] = useState(false);
+  const populationCacheRef = useRef<Record<string, number | null>>({});
+  const fetchInProgressRef = useRef<Record<string, boolean>>({});
 
   useEffect(() => {
     const updateDimensions = () => {
       if (svgRef.current) {
         const rect = svgRef.current.parentElement?.getBoundingClientRect();
-        if (rect) {
-          setDimensions({ width: rect.width, height: rect.height });
-        }
+        if (rect) setDimensions({ width: rect.width, height: rect.height });
       }
     };
-
     updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
+    window.addEventListener("resize", updateDimensions);
+    return () => window.removeEventListener("resize", updateDimensions);
   }, []);
 
   useEffect(() => {
     if (!svgRef.current || dimensions.width === 0) return;
 
     const svg = d3.select(svgRef.current);
-    svg.selectAll('*').remove();
+    svg.selectAll("*").remove();
+
+    // Tooltip
+    let tooltip = tooltipRef.current;
+    if (!tooltip) {
+      const el = document.createElement("div");
+      el.style.position = "absolute";
+      el.style.pointerEvents = "none";
+      el.style.background = "rgba(0,0,0,0.75)";
+      el.style.color = "#fff";
+      el.style.padding = "6px 8px";
+      el.style.borderRadius = "4px";
+      el.style.fontSize = "12px";
+      el.style.display = "none";
+      el.style.zIndex = "9999";
+      document.body.appendChild(el);
+      tooltipRef.current = el;
+      tooltip = el;
+    }
 
     const { width, height } = dimensions;
-
-    // Create projection
-    const projection = d3.geoNaturalEarth1()
+    const projection = d3
+      .geoNaturalEarth1()
       .scale(width / 6)
       .translate([width / 2, height / 2]);
-
     const path = d3.geoPath().projection(projection);
 
-    // Create zoom behavior
-    const zoom = d3.zoom<SVGSVGElement, unknown>()
+    const zoom = d3
+      .zoom<SVGSVGElement, unknown>()
       .scaleExtent([1, 8])
-      .on('zoom', (event) => {
-        g.attr('transform', event.transform.toString());
+      .on("zoom", (event) => {
+        g.attr("transform", event.transform.toString());
       });
+    svg.call(zoom as any);
 
-    svg.call(zoom);
+    const g = svg.append("g");
+    g.append("rect")
+      .attr("width", width)
+      .attr("height", height)
+      .attr("fill", "#0a1929")
+      .attr("opacity", 0.3);
 
-    // Main group for map elements
-    const g = svg.append('g');
-
-    // Add ocean background
-    g.append('rect')
-      .attr('width', width)
-      .attr('height', height)
-      .attr('fill', '#0a1929')
-      .attr('opacity', 0.3);
-
-    // Add graticules (grid lines)
     const graticule = d3.geoGraticule();
-    g.append('path')
+    g.append("path")
       .datum(graticule)
-      .attr('d', path)
-      .attr('fill', 'none')
-      .attr('stroke', '#334155')
-      .attr('stroke-width', 0.5)
-      .attr('opacity', 0.3);
+      .attr("d", path)
+      .attr("fill", "none")
+      .attr("stroke", "#334155")
+      .attr("stroke-width", 0.5)
+      .attr("opacity", 0.3);
 
-    // Load and render world map
-    fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
-      .then(response => response.json())
+    const countriesGroup = g.append("g").attr("class", "countries-group");
+    const popGroup = g.append("g").attr("class", "population-layer");
+
+    // Load world map
+    fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+      .then((r) => r.json())
       .then((world: any) => {
         const countries = feature(world, world.objects.countries);
-
-        // Draw countries
-        g.append('g')
-          .selectAll('path')
+        countriesGroup
+          .append("g")
+          .selectAll("path")
           .data(countries.features)
           .enter()
-          .append('path')
-          .attr('d', path)
-          .attr('fill', '#1e293b')
-          .attr('stroke', '#475569')
-          .attr('stroke-width', 0.5)
-          .attr('class', 'country')
-          .style('cursor', 'pointer')
-          .on('mouseover', function() {
+          .append("path")
+          .attr("d", path as any)
+          .attr("fill", "#1e293b")
+          .attr("stroke", "#475569")
+          .attr("stroke-width", 0.5)
+          .attr("class", "country")
+          .style("cursor", "pointer")
+          .on("mouseover", function () {
             d3.select(this)
-              .attr('fill', '#334155')
-              .attr('stroke', '#64748b')
-              .attr('stroke-width', 1);
+              .attr("fill", "#334155")
+              .attr("stroke", "#64748b")
+              .attr("stroke-width", 1);
           })
-          .on('mouseout', function() {
+          .on("mouseout", function () {
             d3.select(this)
-              .attr('fill', '#1e293b')
-              .attr('stroke', '#475569')
-              .attr('stroke-width', 0.5);
+              .attr("fill", "#1e293b")
+              .attr("stroke", "#475569")
+              .attr("stroke-width", 0.5);
           })
-          .on('click', function(event, d: any) {
+          .on("click", function (event, d: any) {
             const [x, y] = d3.pointer(event, this);
             const coords = projection.invert?.([x, y]);
-            if (coords && onMapClick) {
-              onMapClick(coords as [number, number]);
-            }
+            if (coords && onMapClick) onMapClick(coords as [number, number]);
           });
 
-        // Draw impact point if it exists
-        if (impactPoint) {
-          const coords = projection(impactPoint);
-          if (coords) {
-            // Outer pulse circle
-            g.append('circle')
-              .attr('cx', coords[0])
-              .attr('cy', coords[1])
-              .attr('r', 0)
-              .attr('fill', 'none')
-              .attr('stroke', '#ef4444')
-              .attr('stroke-width', 2)
-              .attr('opacity', 0.8)
-              .transition()
-              .duration(2000)
-              .attr('r', 50)
-              .attr('opacity', 0)
-              .on('end', function repeat() {
-                d3.select(this)
-                  .attr('r', 0)
-                  .attr('opacity', 0.8)
-                  .transition()
-                  .duration(2000)
-                  .attr('r', 50)
-                  .attr('opacity', 0)
-                  .on('end', repeat);
-              });
-
-            // Impact zone circle
-            g.append('circle')
-              .attr('cx', coords[0])
-              .attr('cy', coords[1])
-              .attr('r', 20)
-              .attr('fill', '#ef4444')
-              .attr('opacity', 0.4)
-              .attr('stroke', '#dc2626')
-              .attr('stroke-width', 2);
-
-            // Center point
-            g.append('circle')
-              .attr('cx', coords[0])
-              .attr('cy', coords[1])
-              .attr('r', 4)
-              .attr('fill', '#fef2f2')
-              .attr('stroke', '#991b1b')
-              .attr('stroke-width', 2);
-
-            // Crosshair
-            g.append('line')
-              .attr('x1', coords[0] - 30)
-              .attr('y1', coords[1])
-              .attr('x2', coords[0] + 30)
-              .attr('y2', coords[1])
-              .attr('stroke', '#ef4444')
-              .attr('stroke-width', 1.5);
-
-            g.append('line')
-              .attr('x1', coords[0])
-              .attr('y1', coords[1] - 30)
-              .attr('x2', coords[0])
-              .attr('y2', coords[1] + 30)
-              .attr('stroke', '#ef4444')
-              .attr('stroke-width', 1.5);
-          }
-        }
+        if (showPopLayer) drawPopulationLayer(popGroup, projection);
       })
-      .catch(error => console.error('Error loading world map:', error));
+      .catch((err) => console.error(err));
 
-    // Click handler on ocean
-    svg.on('click', function(event) {
-      if (event.target === this || event.target.tagName === 'rect') {
+    // Impact point
+    if (impactPoint) {
+      const coords = projection(impactPoint);
+      if (coords) {
+        g.append("circle")
+          .attr("cx", coords[0])
+          .attr("cy", coords[1])
+          .attr("r", 50)
+          .attr("fill", "#ef4444")
+          .attr("opacity", 0.3);
+        g.append("circle")
+          .attr("cx", coords[0])
+          .attr("cy", coords[1])
+          .attr("r", 4)
+          .attr("fill", "#fef2f2")
+          .attr("stroke", "#991b1b")
+          .attr("stroke-width", 2);
+      }
+    }
+
+    svg.on("click", function (event) {
+      if (event.target === this || event.target.tagName === "rect") {
         const [x, y] = d3.pointer(event);
         const coords = projection.invert?.([x, y]);
-        if (coords && onMapClick) {
-          onMapClick(coords as [number, number]);
-        }
+        if (coords && onMapClick) onMapClick(coords as [number, number]);
       }
     });
 
-  }, [dimensions, impactPoint, onMapClick]);
+    // -------------------- Population Layer --------------------
+    function drawPopulationLayer(
+      popLayerG: d3.Selection<SVGGElement, unknown, null, undefined>,
+      proj: any
+    ) {
+      popLayerG.selectAll("*").remove();
+
+      fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json")
+        .then((res) => res.json())
+        .then((usTopo: any) => {
+          const states = feature(usTopo, usTopo.objects.states) as any;
+          const statePoints = states.features
+            .map((f: any) => {
+              const c = d3.geoCentroid(f);
+              const p = proj(c);
+              return {
+                id: f.id,
+                name:
+                  f.properties?.name || f.properties?.NAME || `State ${f.id}`,
+                lonlat: c,
+                screen: p,
+              };
+            })
+            .filter(
+              (d) => d.screen && isFinite(d.screen[0]) && isFinite(d.screen[1])
+            );
+
+          const circles = popLayerG
+            .selectAll<SVGCircleElement, any>("circle.pop-circle")
+            .data(statePoints)
+            .enter()
+            .append("circle")
+            .attr("class", "pop-circle")
+            .attr(
+              "cx",
+              (d) => d.screen[0] + (Math.random() - 0.5) * 4 // jitter X ±2px
+            )
+            .attr(
+              "cy",
+              (d) => d.screen[1] + (Math.random() - 0.5) * 4 // jitter Y ±2px
+            )
+            .attr("r", 2) // círculo pequeno
+            .attr("fill", "rgba(239,68,68,0.6)")
+            .attr("stroke", "rgba(220,38,38,0.9)")
+            .attr("stroke-width", 0.8)
+            .attr("opacity", 0.7)
+            .style("cursor", "pointer")
+            .on("mouseover", async function (event, d: any) {
+              d3.select(this).attr("opacity", 1).attr("stroke-width", 1.2);
+
+              const key = `state-${d.id}`;
+
+              if (
+                populationCacheRef.current[key] == null &&
+                !fetchInProgressRef.current[key]
+              ) {
+                fetchInProgressRef.current[key] = true;
+                try {
+                  const res = await fetch(
+                    `https://backend-challenge-nasa-space-apps-2025-dark-tree-2941.fly.dev/impact/population?state=${d.id}`
+                  );
+                  const data = await res.json();
+                  populationCacheRef.current[key] = data.population ?? 0;
+                } catch (err) {
+                  console.error("Erro ao buscar população do estado", err);
+                  populationCacheRef.current[key] = 0;
+                } finally {
+                  fetchInProgressRef.current[key] = false;
+                }
+              }
+
+              if (tooltipRef.current) {
+                const pop = populationCacheRef.current[key];
+                tooltipRef.current.innerHTML = `<div style="font-weight:600">${
+                  d.name
+                }</div>
+                  <div style="margin-top:4px">População (estado): ${
+                    pop == null ? "Carregando..." : pop.toLocaleString()
+                  }</div>`;
+                tooltipRef.current.style.display = "block";
+              }
+            })
+            .on("mousemove", function (event) {
+              if (tooltipRef.current) {
+                tooltipRef.current.style.left = `${event.pageX + 12}px`;
+                tooltipRef.current.style.top = `${event.pageY + 12}px`;
+              }
+            })
+            .on("mouseout", function () {
+              d3.select(this).attr("opacity", 0.7).attr("stroke-width", 0.8);
+              if (tooltipRef.current) tooltipRef.current.style.display = "none";
+            });
+        })
+        .catch((err) => console.error("Erro camada população:", err));
+    }
+  }, [dimensions, impactPoint, onMapClick, showPopLayer]);
 
   return (
-    <svg
-      ref={svgRef}
-      className="w-full h-full"
-      style={{ background: '#0f172a' }}
-    />
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <svg
+        ref={svgRef}
+        className="w-full h-full"
+        style={{ background: "#0f172a", display: "block" }}
+      />
+      <div style={{ position: "absolute", top: 12, left: 12, zIndex: 1000 }}>
+        <button
+          onClick={() => setShowPopLayer((prev) => !prev)}
+          style={{
+            background: showPopLayer ? "#dc2626" : "#111827",
+            color: "#fff",
+            border: "none",
+            padding: "8px 12px",
+            borderRadius: 6,
+            cursor: "pointer",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
+          }}
+          title="Ativar/Desativar camada de densidade populacional (EUA - aproximação)"
+        >
+          <UsersIcon />
+        </button>
+      </div>
+    </div>
   );
 }
