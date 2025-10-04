@@ -11,7 +11,7 @@ import { Globe3DControls } from './components/Globe3DControls';
 import { Badge } from './components/ui/badge';
 import { Button } from './components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs';
-import { Globe2, Map, Satellite, Download, Focus } from 'lucide-react';
+import { Globe2, Map, Satellite, Download, Focus, PanelRightOpen, PanelRightClose } from 'lucide-react';
 import { NASAAsteroid } from './types/nasa';
 import { generateMockNASAData, flattenNASAData } from './utils/mockNasaData';
 
@@ -24,42 +24,30 @@ export default function App() {
     params: AsteroidParams;
     impactPoint: [number, number];
   } | null>(null);
-  
-  // NASA NEO data
+
   const [asteroids, setAsteroids] = useState<NASAAsteroid[]>([]);
   const [selectedAsteroid, setSelectedAsteroid] = useState<NASAAsteroid | null>(null);
   const [loading, setLoading] = useState(false);
-  
-  // 3D controls
+
   const [autoRotate, setAutoRotate] = useState(false);
   const [focusedAsteroid, setFocusedAsteroid] = useState<NASAAsteroid | null>(null);
   const controlsRef = useRef<any>(null);
 
-  // Load mock NASA data on mount
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   useEffect(() => {
     loadNASAData();
   }, []);
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      // F key to focus on selected asteroid
       if (e.key === 'f' || e.key === 'F') {
-        if (selectedAsteroid && !focusedAsteroid) {
-          handleFocusAsteroid();
-        }
+        if (selectedAsteroid && !focusedAsteroid) handleFocusAsteroid();
       }
-      // H key to return to Earth (Home)
       if (e.key === 'h' || e.key === 'H') {
-        if (focusedAsteroid) {
-          handleReturnToEarth();
-        }
+        if (focusedAsteroid) handleReturnToEarth();
       }
-      // R key to reset view
-      if (e.key === 'r' || e.key === 'R') {
-        handleResetView();
-      }
-      // Escape to deselect
+      if (e.key === 'r' || e.key === 'R') handleResetView();
       if (e.key === 'Escape') {
         setSelectedAsteroid(null);
         setFocusedAsteroid(null);
@@ -72,7 +60,6 @@ export default function App() {
 
   const loadNASAData = () => {
     setLoading(true);
-    // Simulate API delay
     setTimeout(() => {
       const mockData = generateMockNASAData();
       const flattenedAsteroids = flattenNASAData(mockData);
@@ -81,7 +68,6 @@ export default function App() {
     }, 500);
   };
 
-  // Calculate statistics
   const hazardousCount = asteroids.filter(a => a.is_potentially_hazardous_asteroid).length;
   const sentryCount = asteroids.filter(a => a.is_sentry_object).length;
 
@@ -92,61 +78,42 @@ export default function App() {
 
   const handleSimulate = (params: AsteroidParams) => {
     if (impactPoint) {
-      setSimulationResults({
-        params,
-        impactPoint,
-      });
+      setSimulationResults({ params, impactPoint });
     }
   };
 
   const handleAsteroidSelect = (asteroid: NASAAsteroid) => {
     setSelectedAsteroid(asteroid);
-    // Auto-focus on selected asteroid
     setFocusedAsteroid(asteroid);
   };
 
   const handleFocusAsteroid = () => {
-    if (selectedAsteroid) {
-      setFocusedAsteroid(selectedAsteroid);
-    }
+    if (selectedAsteroid) setFocusedAsteroid(selectedAsteroid);
   };
 
-  const handleReturnToEarth = () => {
-    setFocusedAsteroid(null);
-  };
+  const handleReturnToEarth = () => setFocusedAsteroid(null);
 
   const handleSimulateAsteroidImpact = () => {
-    if (selectedAsteroid) {
-      const closeApproach = selectedAsteroid.close_approach_data[0];
-      const diameter = selectedAsteroid.estimated_diameter.meters.estimated_diameter_min;
-      const velocity = parseFloat(closeApproach.relative_velocity.kilometers_per_second);
-      
-      // Set random impact point
-      const randomLat = (Math.random() - 0.5) * 160;
-      const randomLng = (Math.random() - 0.5) * 360;
-      setImpactPoint([randomLng, randomLat]);
-      
-      // Simulate impact with asteroid parameters
-      setSimulationResults({
-        params: {
-          diameter,
-          velocity,
-          angle: 45,
-          density: 3000,
-        },
-        impactPoint: [randomLng, randomLat],
-      });
-      
-      // Switch to 2D view to show impact
-      setViewMode('2d');
-    }
+    if (!selectedAsteroid) return;
+    const closeApproach = selectedAsteroid.close_approach_data[0];
+    const diameter = selectedAsteroid.estimated_diameter.meters.estimated_diameter_min;
+    const velocity = parseFloat(closeApproach.relative_velocity.kilometers_per_second);
+
+    const randomLat = (Math.random() - 0.5) * 160;
+    const randomLng = (Math.random() - 0.5) * 360;
+    setImpactPoint([randomLng, randomLat]);
+
+    setSimulationResults({
+      params: { diameter, velocity, angle: 45, density: 3000 },
+      impactPoint: [randomLng, randomLat],
+    });
+
+    setViewMode('2d');
   };
 
   const handleResetView = () => {
     setFocusedAsteroid(null);
-    if (controlsRef.current) {
-      controlsRef.current.reset();
-    }
+    if (controlsRef.current) controlsRef.current.reset();
   };
 
   return (
@@ -165,26 +132,19 @@ export default function App() {
               {asteroids.length} NEOs tracked
             </Badge>
             <div className="flex gap-2">
-              <Button
-                variant={viewMode === '2d' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('2d')}
-              >
-                <Map className="w-4 h-4 mr-2" />
-                2D Map
+              <Button variant={viewMode === '2d' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('2d')}>
+                <Map className="w-4 h-4 mr-2" />2D Map
               </Button>
-              <Button
-                variant={viewMode === '3d' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('3d')}
-              >
-                <Globe2 className="w-4 h-4 mr-2" />
-                3D Globe
+              <Button variant={viewMode === '3d' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('3d')}>
+                <Globe2 className="w-4 h-4 mr-2" />3D Globe
               </Button>
             </div>
             <Button variant="outline" size="sm" onClick={loadNASAData} disabled={loading}>
               <Download className="w-4 h-4 mr-2" />
               {loading ? 'Loading...' : 'Load NEO Data'}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setSidebarOpen(!sidebarOpen)} className="ml-2">
+              {sidebarOpen ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
             </Button>
           </div>
         </div>
@@ -196,19 +156,12 @@ export default function App() {
         <div className="flex-1 relative">
           {viewMode === '2d' ? (
             <>
-              <WorldMap 
-                onMapClick={handleMapClick}
-                impactPoint={impactPoint}
-              />
-              
+              <WorldMap onMapClick={handleMapClick} impactPoint={impactPoint} />
               {!impactPoint && (
                 <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">
-                  <p className="opacity-80">
-                    Click anywhere on the map to set the asteroid impact location
-                  </p>
+                  <p className="opacity-80">Click anywhere on the map to set the asteroid impact location</p>
                 </div>
               )}
-
               {impactPoint && (
                 <div className="absolute bottom-6 left-6 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-4 py-2">
                   <p className="opacity-60">Impact Coordinates:</p>
@@ -220,7 +173,7 @@ export default function App() {
             </>
           ) : (
             <>
-              <Globe3D 
+              <Globe3D
                 asteroids={asteroids}
                 onAsteroidClick={handleAsteroidSelect}
                 selectedAsteroid={selectedAsteroid}
@@ -228,7 +181,6 @@ export default function App() {
                 controlsRef={controlsRef}
                 focusedAsteroid={focusedAsteroid}
               />
-              
               <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">
                 {focusedAsteroid ? (
                   <div className="flex items-center gap-2">
@@ -238,103 +190,86 @@ export default function App() {
                     </p>
                   </div>
                 ) : (
-                  <p className="opacity-80">
-                    Drag to rotate • Scroll to zoom • Click asteroids to view details
-                  </p>
-                )}
-              </div>
-              
-              {/* Legend and Stats */}
-              <div className="absolute top-6 left-6 space-y-3 max-w-xs">
-                <AsteroidLegend 
-                  totalAsteroids={asteroids.length}
-                  hazardousCount={hazardousCount}
-                  sentryCount={sentryCount}
-                />
-                {asteroids.length > 0 && (
-                  <AsteroidStats asteroids={asteroids} />
+                  <p className="opacity-80">Drag to rotate • Scroll to zoom • Click asteroids to view details</p>
                 )}
               </div>
 
-              {/* 3D Controls */}
-              <div className="absolute bottom-6 left-6 max-w-xs">
-                <Globe3DControls
-                  autoRotate={autoRotate}
-                  onAutoRotateChange={setAutoRotate}
-                  onResetView={handleResetView}
-                  onFocusAsteroid={handleFocusAsteroid}
-                  onReturnToEarth={handleReturnToEarth}
-                  selectedAsteroid={selectedAsteroid}
-                  isFocused={focusedAsteroid !== null}
-                />
+              {/* Controles e legendas roláveis no canto inferior esquerdo */}
+              <div className="absolute bottom-6 left-6 max-h-[calc(100vh-200px)] w-80 overflow-y-auto flex flex-col space-y-3 p-3 bg-card/90 rounded-lg backdrop-blur-sm border border-border/50 shadow-lg">
+                <div className="flex-shrink-0">
+                  <AsteroidLegend totalAsteroids={asteroids.length} hazardousCount={hazardousCount} sentryCount={sentryCount} />
+                </div>
+                {asteroids.length > 0 && (
+                  <div className="flex-shrink-0">
+                    <AsteroidStats asteroids={asteroids} />
+                  </div>
+                )}
+                <div className="flex-shrink-0">
+                  <Globe3DControls
+                    autoRotate={autoRotate}
+                    onAutoRotateChange={setAutoRotate}
+                    onResetView={handleResetView}
+                    onFocusAsteroid={handleFocusAsteroid}
+                    onReturnToEarth={handleReturnToEarth}
+                    selectedAsteroid={selectedAsteroid}
+                    isFocused={focusedAsteroid !== null}
+                  />
+                </div>
               </div>
             </>
           )}
         </div>
 
         {/* Side Panel */}
-        <div className="w-96 border-l border-border/50 bg-muted/20 overflow-hidden flex flex-col">
-          <Tabs defaultValue="tracking" className="flex-1 flex flex-col">
-            <div className="border-b border-border/50 px-4 pt-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="tracking">
-                  <Satellite className="w-4 h-4 mr-2" />
-                  Tracking
-                </TabsTrigger>
-                <TabsTrigger value="simulation">
-                  <Globe2 className="w-4 h-4 mr-2" />
-                  Simulation
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            <TabsContent value="tracking" className="flex-1 overflow-hidden mt-0">
-              <div className="h-full flex flex-col">
-                {selectedAsteroid ? (
-                  <div className="flex-1 overflow-y-auto p-4">
-                    <AsteroidDetails 
-                      asteroid={selectedAsteroid}
-                      onSimulateImpact={handleSimulateAsteroidImpact}
-                      onFocusInView={handleFocusAsteroid}
-                    />
-                    <Button
-                      variant="outline"
-                      className="w-full mt-4"
-                      onClick={() => {
-                        setSelectedAsteroid(null);
-                        setFocusedAsteroid(null);
-                      }}
-                    >
-                      Back to List
-                    </Button>
-                  </div>
-                ) : (
-                  <AsteroidList 
-                    asteroids={asteroids}
-                    onAsteroidSelect={handleAsteroidSelect}
-                    selectedAsteroid={selectedAsteroid}
-                  />
-                )}
+        {sidebarOpen && (
+          <div className="w-96 border-l border-border/50 bg-muted/20 overflow-hidden flex flex-col transition-all duration-300 ease-in-out">
+            <Tabs defaultValue="tracking" className="flex-1 flex flex-col">
+              <div className="border-b border-border/50 px-4 pt-4">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="tracking">
+                    <Satellite className="w-4 h-4 mr-2" /> Tracking
+                  </TabsTrigger>
+                  <TabsTrigger value="simulation">
+                    <Globe2 className="w-4 h-4 mr-2" /> Simulation
+                  </TabsTrigger>
+                </TabsList>
               </div>
-            </TabsContent>
 
-            <TabsContent value="simulation" className="flex-1 overflow-y-auto mt-0">
-              <div className="p-4 space-y-4">
-                <AsteroidControls 
-                  onSimulate={handleSimulate}
-                  impactPoint={impactPoint}
-                />
-                
-                {simulationResults && (
-                  <ImpactResults 
-                    params={simulationResults.params}
-                    impactPoint={simulationResults.impactPoint}
-                  />
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
+              <TabsContent value="tracking" className="flex-1 overflow-hidden mt-0">
+                <div className="h-full flex flex-col">
+                  {selectedAsteroid ? (
+                    <div className="flex-1 overflow-y-auto p-4">
+                      <AsteroidDetails
+                        asteroid={selectedAsteroid}
+                        onSimulateImpact={handleSimulateAsteroidImpact}
+                        onFocusInView={handleFocusAsteroid}
+                      />
+                      <Button
+                        variant="outline"
+                        className="w-full mt-4"
+                        onClick={() => {
+                          setSelectedAsteroid(null);
+                          setFocusedAsteroid(null);
+                        }}
+                      >
+                        Back to List
+                      </Button>
+                    </div>
+                  ) : (
+                    <AsteroidList asteroids={asteroids} onAsteroidSelect={handleAsteroidSelect} selectedAsteroid={selectedAsteroid} />
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="simulation" className="flex-1 overflow-y-auto mt-0">
+                <div className="p-4 space-y-4">
+                  <AsteroidControls onSimulate={handleSimulate} impactPoint={impactPoint} />
+                  {simulationResults && <ImpactResults params={simulationResults.params} impactPoint={simulationResults.impactPoint} />}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
       </div>
     </div>
   );
