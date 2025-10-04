@@ -1,6 +1,6 @@
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree, ThreeEvent } from '@react-three/fiber';
-import { OrbitControls, Sphere, Line, Html } from '@react-three/drei';
+import { OrbitControls, Line, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { NASAAsteroid } from '../types/nasa';
 import { Badge } from './ui/badge';
@@ -16,12 +16,12 @@ interface Globe3DProps {
 }
 
 // Camera controller for smooth transitions
-function CameraController({ 
-  focusedAsteroid, 
-  asteroids, 
-  controlsRef 
-}: { 
-  focusedAsteroid: NASAAsteroid | null; 
+function CameraController({
+  focusedAsteroid,
+  asteroids,
+  controlsRef
+}: {
+  focusedAsteroid: NASAAsteroid | null;
   asteroids: NASAAsteroid[];
   controlsRef: React.MutableRefObject<any>;
 }) {
@@ -40,7 +40,7 @@ function CameraController({
       if (index !== -1) {
         const closeApproach = focusedAsteroid.close_approach_data[0];
         const missDistanceKm = parseFloat(closeApproach.miss_distance.kilometers);
-        
+
         const distance = 2 + (missDistanceKm / 100000);
         const angle = (index * 0.5) % (Math.PI * 2);
         const elevation = (Math.sin(index * 0.7) * 0.5);
@@ -54,7 +54,7 @@ function CameraController({
         // Calculate camera position (closer to asteroid for better view)
         const diameter = focusedAsteroid.estimated_diameter.meters.estimated_diameter_min;
         const size = Math.max(0.02, Math.min(0.15, diameter / 1000));
-        
+
         // Position camera at a good distance from the asteroid
         const cameraDistance = Math.max(0.3, size * 4);
         const offset = asteroidPos.clone().normalize().multiplyScalar(cameraDistance);
@@ -85,11 +85,11 @@ function CameraController({
   useFrame(() => {
     if (isAnimating.current && animationProgress.current < 1) {
       animationProgress.current += 0.02; // Animation speed
-      
+
       // Easing function (ease-in-out)
       const t = animationProgress.current;
-      const eased = t < 0.5 
-        ? 2 * t * t 
+      const eased = t < 0.5
+        ? 2 * t * t
         : -1 + (4 - 2 * t) * t;
 
       // Interpolate camera position
@@ -123,40 +123,21 @@ function Earth() {
   const cloudsRef = useRef<THREE.Mesh>(null);
 
   // Load realistic Earth texture
-  const earthTexture = useMemo(() => {
-    const textureLoader = new THREE.TextureLoader();
-    const texture = textureLoader.load('https://images.unsplash.com/photo-1533921482637-8e125577dde6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlYXJ0aCUyMHBsYW5ldCUyMHNwYWNlfGVufDF8fHx8MTc1OTUwMzE4MXww&ixlib=rb-4.1.0&q=80&w=1080');
-    return texture;
+  // Use three.js example planet textures for a more realistic globe
+  const earthTextures = useMemo(() => {
+    const loader = new THREE.TextureLoader();
+    return {
+      map: loader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg'),
+      normalMap: loader.load('https://threejs.org/examples/textures/planets/earth_normal_2048.jpg'),
+      specularMap: loader.load('https://threejs.org/examples/textures/planets/earth_specular_2048.jpg'),
+      // cloud layer (with alpha)
+      clouds: loader.load('https://threejs.org/examples/textures/planets/earth_clouds_1024.png'),
+    };
   }, []);
 
-  // Create clouds texture
-  const cloudsTexture = useMemo(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 2048;
-    canvas.height = 1024;
-    const ctx = canvas.getContext('2d')!;
+  // clouds texture is provided above via earthTextures.clouds
 
-    // Create cloud pattern
-    ctx.fillStyle = 'rgba(255, 255, 255, 0)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Add random cloud patches
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    for (let i = 0; i < 100; i++) {
-      const x = Math.random() * canvas.width;
-      const y = Math.random() * canvas.height;
-      const radius = 20 + Math.random() * 60;
-      
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    const texture = new THREE.CanvasTexture(canvas);
-    return texture;
-  }, []);
-
-  useFrame((state) => {
+  useFrame((_state) => {
     if (earthRef.current) {
       earthRef.current.rotation.y += 0.0005;
     }
@@ -167,45 +148,40 @@ function Earth() {
 
   return (
     <>
-      {/* Earth */}
-      <Sphere ref={earthRef} args={[2, 128, 128]}>
-        <meshStandardMaterial 
-          map={earthTexture}
-          metalness={0.1}
-          roughness={0.7}
-          envMapIntensity={0.5}
+      {/* Earth (diffuse + normal + specular) */}
+      <mesh ref={earthRef}>
+        <sphereGeometry args={[2, 128, 128]} />
+        <meshPhongMaterial
+          map={earthTextures.map}
+          normalMap={earthTextures.normalMap}
+          specularMap={earthTextures.specularMap}
+          specular={new THREE.Color(0x222222)}
+          shininess={10}
         />
-      </Sphere>
+      </mesh>
 
-      {/* Clouds layer */}
-      <Sphere ref={cloudsRef} args={[2.01, 64, 64]}>
-        <meshStandardMaterial
-          map={cloudsTexture}
+      {/* Clouds layer (separate transparent mesh) */}
+      <mesh ref={cloudsRef}>
+        <sphereGeometry args={[2.02, 128, 128]} />
+        <meshPhongMaterial
+          map={earthTextures.clouds}
           transparent
-          opacity={0.4}
+          opacity={0.45}
           depthWrite={false}
+          side={THREE.FrontSide}
         />
-      </Sphere>
+      </mesh>
 
-      {/* Atmosphere glow - inner */}
-      <Sphere args={[2.05, 64, 64]}>
+      {/* Soft atmosphere glow (backside to create halo) */}
+      <mesh>
+        <sphereGeometry args={[2.12, 64, 64]} />
         <meshBasicMaterial
           color="#60a5fa"
-          transparent
-          opacity={0.15}
-          side={THREE.BackSide}
-        />
-      </Sphere>
-
-      {/* Atmosphere glow - outer */}
-      <Sphere args={[2.15, 64, 64]}>
-        <meshBasicMaterial
-          color="#93c5fd"
           transparent
           opacity={0.08}
           side={THREE.BackSide}
         />
-      </Sphere>
+      </mesh>
     </>
   );
 }
@@ -213,33 +189,33 @@ function Earth() {
 // Particle system for selected asteroid
 function AsteroidParticles({ position, color }: { position: [number, number, number]; color: string }) {
   const particlesRef = useRef<THREE.Points>(null);
-  
+
   const particlesGeometry = useMemo(() => {
     const geometry = new THREE.BufferGeometry();
     const count = 30;
     const positions = new Float32Array(count * 3);
-    
+
     for (let i = 0; i < count; i++) {
       const radius = 0.1 + Math.random() * 0.2;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.random() * Math.PI;
-      
+
       positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
       positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
       positions[i * 3 + 2] = radius * Math.cos(phi);
     }
-    
+
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     return geometry;
   }, []);
-  
-  useFrame((state) => {
+
+  useFrame((_state) => {
     if (particlesRef.current) {
-      particlesRef.current.rotation.y = state.clock.elapsedTime * 0.5;
-      particlesRef.current.rotation.x = state.clock.elapsedTime * 0.3;
+      particlesRef.current.rotation.y = _state.clock.elapsedTime * 0.5;
+      particlesRef.current.rotation.x = _state.clock.elapsedTime * 0.3;
     }
   });
-  
+
   return (
     <points ref={particlesRef} position={position} geometry={particlesGeometry}>
       <pointsMaterial
@@ -253,14 +229,14 @@ function AsteroidParticles({ position, color }: { position: [number, number, num
   );
 }
 
-function Asteroid({ 
-  asteroid, 
-  index, 
+function Asteroid({
+  asteroid,
+  index,
   onClick,
   isSelected,
-  isFocused 
-}: { 
-  asteroid: NASAAsteroid; 
+  isFocused
+}: {
+  asteroid: NASAAsteroid;
   index: number;
   onClick: () => void;
   isSelected: boolean;
@@ -278,11 +254,11 @@ function Asteroid({
   const velocity = parseFloat(closeApproach.relative_velocity.kilometers_per_second);
 
   // Color based on hazard level
-  const color = asteroid.is_potentially_hazardous_asteroid 
-    ? '#ef4444' 
-    : asteroid.is_sentry_object 
-    ? '#f97316'
-    : '#60a5fa';
+  const color = asteroid.is_potentially_hazardous_asteroid
+    ? '#ef4444'
+    : asteroid.is_sentry_object
+      ? '#f97316'
+      : '#60a5fa';
 
   // Load asteroid texture
   const asteroidTexture = useMemo(() => {
@@ -313,7 +289,7 @@ function Asteroid({
     const highlightGradient = ctx.createRadialGradient(50, 50, 0, 64, 64, 40);
     highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
     highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    
+
     ctx.fillStyle = highlightGradient;
     ctx.beginPath();
     ctx.arc(64, 64, 40, 0, Math.PI * 2);
@@ -322,7 +298,7 @@ function Asteroid({
     const texture = new THREE.CanvasTexture(canvas);
     return texture;
   }, [color]);
-  
+
   // Calculate position based on miss distance and time
   const distance = 2 + (missDistanceKm / 100000); // Scale distance
   const angle = (index * 0.5) % (Math.PI * 2); // Distribute asteroids around Earth
@@ -342,51 +318,51 @@ function Asteroid({
   const trajectoryPoints = useMemo(() => {
     const points: THREE.Vector3[] = [];
     const steps = 50;
-    
+
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
       const currentAngle = angle - (t * Math.PI * 0.3);
       const currentDistance = distance * (1 - t * 0.3);
-      
+
       points.push(new THREE.Vector3(
         Math.cos(currentAngle) * currentDistance,
         elevation * currentDistance * (1 - t * 0.2),
         Math.sin(currentAngle) * currentDistance
       ));
     }
-    
+
     return points;
   }, [angle, distance, elevation]);
 
   // Calculate energy for display
-  const volume = (4/3) * Math.PI * Math.pow(diameter/2, 3);
+  const volume = (4 / 3) * Math.PI * Math.pow(diameter / 2, 3);
   const mass = volume * 3000;
   const energyJoules = 0.5 * mass * Math.pow(velocity * 1000, 2);
   const energyMegatons = energyJoules / (4.184 * Math.pow(10, 15));
 
-  useFrame((state) => {
+  useFrame((_state) => {
     // Calculate distance from camera
     const asteroidPosition = new THREE.Vector3(...position);
     const distanceFromCamera = camera.position.distanceTo(asteroidPosition);
-    
+
     // Switch to sprite if far away (performance optimization)
     const shouldUseSprite = distanceFromCamera > 8 && !isFocused;
     setUseSprite(shouldUseSprite);
 
     if (asteroidRef.current) {
       // Gentle floating animation
-      asteroidRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime + index) * 0.05;
+      asteroidRef.current.position.y = position[1] + Math.sin(_state.clock.elapsedTime + index) * 0.05;
       asteroidRef.current.rotation.x += 0.01;
       asteroidRef.current.rotation.y += 0.01;
     }
-    
+
     if (spriteRef.current) {
-      spriteRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime + index) * 0.05;
+      spriteRef.current.position.y = position[1] + Math.sin(_state.clock.elapsedTime + index) * 0.05;
     }
-    
+
     // Pulsing glow for focused asteroid
     if (glowRef.current && isFocused) {
-      const pulse = Math.sin(state.clock.elapsedTime * 2) * 0.3 + 0.7;
+      const pulse = Math.sin(_state.clock.elapsedTime * 2) * 0.3 + 0.7;
       glowRef.current.scale.setScalar(pulse);
     }
   });
@@ -432,7 +408,7 @@ function Asteroid({
               metalness={0.1}
             />
           </mesh>
-          
+
           {/* Outer glow rim for better visibility */}
           <mesh position={position}>
             <sphereGeometry args={[size * 1.1, 16, 16]} />
@@ -480,16 +456,16 @@ function Asteroid({
             <ringGeometry args={[size * 1.5, size * 2, 32]} />
             <meshBasicMaterial color={color} side={THREE.DoubleSide} transparent opacity={0.5} />
           </mesh>
-          
+
           {/* Pulsing outer ring */}
           <mesh position={position} rotation={[Math.PI / 2, 0, 0]}>
             <ringGeometry args={[size * 2.5, size * 3, 32]} />
             <meshBasicMaterial color={color} side={THREE.DoubleSide} transparent opacity={0.2} />
           </mesh>
-          
+
           {/* Particle effect */}
           <AsteroidParticles position={position} color={color} />
-          
+
           {/* Glow sphere */}
           <mesh ref={glowRef} position={position}>
             <sphereGeometry args={[size * 2, 16, 16]} />
@@ -497,7 +473,7 @@ function Asteroid({
           </mesh>
         </>
       )}
-      
+
       {/* Extra visual effects for focused asteroid */}
       {isFocused && (
         <>
@@ -506,7 +482,7 @@ function Asteroid({
             <ringGeometry args={[size * 4, size * 4.5, 32]} />
             <meshBasicMaterial color={color} side={THREE.DoubleSide} transparent opacity={0.15} />
           </mesh>
-          
+
           {/* Direction indicator lines */}
           <Line
             points={[
@@ -572,7 +548,7 @@ function Asteroid({
                 </Badge>
               )}
             </div>
-            
+
             <div className="space-y-2 pt-2 border-t border-border/30">
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -584,7 +560,7 @@ function Asteroid({
                   <p className="font-medium">{velocity.toFixed(2)} km/s</p>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <p className="opacity-60">Miss Dist.</p>
@@ -595,7 +571,7 @@ function Asteroid({
                   <p className="font-medium">{energyMegatons.toFixed(2)} MT</p>
                 </div>
               </div>
-              
+
               <div className="pt-2 border-t border-border/30">
                 <p className="opacity-60">Approach Date</p>
                 <p className="font-medium">{closeApproach.close_approach_date}</p>
@@ -625,23 +601,23 @@ function Asteroid({
 // Star field background
 function Stars() {
   const starsRef = useRef<THREE.Points>(null);
-  
+
   const { starsGeometry, starColors, starSizes } = useMemo(() => {
     const geometry = new THREE.BufferGeometry();
     const count = 5000;
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
-    
+
     for (let i = 0; i < count; i++) {
       const radius = 15 + Math.random() * 35;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.random() * Math.PI;
-      
+
       positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
       positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
       positions[i * 3 + 2] = radius * Math.cos(phi);
-      
+
       // Vary star colors (white, blue-white, yellow-white)
       const colorVariation = Math.random();
       if (colorVariation < 0.7) {
@@ -660,24 +636,24 @@ function Stars() {
         colors[i * 3 + 1] = 0.95;
         colors[i * 3 + 2] = 0.8;
       }
-      
+
       // Vary star sizes
       sizes[i] = Math.random() * 0.08 + 0.02;
     }
-    
+
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-    
+
     return { starsGeometry: geometry, starColors: colors, starSizes: sizes };
   }, []);
-  
+
   useFrame(() => {
     if (starsRef.current) {
       starsRef.current.rotation.y += 0.00005;
     }
   });
-  
+
   return (
     <points ref={starsRef} geometry={starsGeometry}>
       <pointsMaterial
@@ -696,36 +672,36 @@ function Scene({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, contr
   return (
     <>
       {/* Camera controller for smooth transitions */}
-      <CameraController 
-        focusedAsteroid={focusedAsteroid || null} 
+      <CameraController
+        focusedAsteroid={focusedAsteroid || null}
         asteroids={asteroids}
         controlsRef={controlsRef!}
       />
 
       {/* Background stars */}
       <Stars />
-      
+
       {/* Lighting setup for realistic space */}
       <ambientLight intensity={0.3} />
-      
+
       {/* Sun light (main directional) */}
-      <directionalLight 
-        position={[10, 5, 10]} 
-        intensity={2} 
-        castShadow 
+      <directionalLight
+        position={[10, 5, 10]}
+        intensity={2}
+        castShadow
         color="#ffffff"
       />
-      
+
       {/* Fill light (softer, opposite side) */}
-      <directionalLight 
-        position={[-8, -4, -8]} 
-        intensity={0.2} 
+      <directionalLight
+        position={[-8, -4, -8]}
+        intensity={0.2}
         color="#93c5fd"
       />
-      
+
       {/* Earth ambient glow */}
       <pointLight position={[0, 0, 0]} intensity={0.4} color="#4a9eff" distance={5} decay={2} />
-      
+
       {/* Background space light */}
       <hemisphereLight args={['#0a0e1a', '#000000', 0.2]} />
 
@@ -763,9 +739,9 @@ export function Globe3D({ asteroids, onAsteroidClick, selectedAsteroid, autoRota
   return (
     <div className="w-full h-full bg-gradient-to-b from-[#000000] via-[#0a0e1a] to-[#1a1f35]">
       <Canvas
-        camera={{ position: [0, 0, 8], fov: 60 }}
-        gl={{ 
-          antialias: true, 
+        camera={{ position: [0, 0, 6], fov: 60 }}
+        gl={{
+          antialias: true,
           alpha: false,
           toneMapping: THREE.ACESFilmicToneMapping,
           toneMappingExposure: 1.2
@@ -773,9 +749,9 @@ export function Globe3D({ asteroids, onAsteroidClick, selectedAsteroid, autoRota
       >
         {/* Space background color */}
         <color attach="background" args={['#000000']} />
-        
-        <Scene 
-          asteroids={asteroids} 
+
+        <Scene
+          asteroids={asteroids}
           onAsteroidClick={onAsteroidClick}
           selectedAsteroid={selectedAsteroid}
           autoRotate={autoRotate}
