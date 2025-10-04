@@ -1,3 +1,4 @@
+/// <reference path="../types/three-fiber.d.ts" />
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree, ThreeEvent } from '@react-three/fiber';
 import { OrbitControls, Line, Html } from '@react-three/drei';
@@ -13,9 +14,9 @@ interface Globe3DProps {
   autoRotate?: boolean;
   controlsRef?: React.MutableRefObject<any>;
   focusedAsteroid?: NASAAsteroid | null;
+  onSimulateImpact?: (asteroid: NASAAsteroid) => void;
 }
 
-// Camera controller for smooth transitions
 function CameraController({
   focusedAsteroid,
   asteroids,
@@ -234,14 +235,17 @@ function Asteroid({
   index,
   onClick,
   isSelected,
-  isFocused
+  isFocused,
+  onSimulateImpact
 }: {
   asteroid: NASAAsteroid;
   index: number;
   onClick: () => void;
   isSelected: boolean;
   isFocused?: boolean;
+  onSimulateImpact?: (a: NASAAsteroid) => void;
 }) {
+  // ...existing code...
   const asteroidRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.Mesh>(null);
   const spriteRef = useRef<THREE.Sprite>(null);
@@ -533,7 +537,7 @@ function Asteroid({
           position={[position[0], position[1] + size + 0.5, position[2]]}
           center
           distanceFactor={10}
-          style={{ pointerEvents: 'none' }}
+          style={{ pointerEvents: 'auto' }}
         >
           <div className="bg-card/95 backdrop-blur-sm border-2 border-primary/50 rounded-lg px-4 py-3 shadow-xl min-w-[280px]">
             <div className="flex items-start justify-between mb-2">
@@ -575,6 +579,18 @@ function Asteroid({
               <div className="pt-2 border-t border-border/30">
                 <p className="opacity-60">Approach Date</p>
                 <p className="font-medium">{closeApproach.close_approach_date}</p>
+              </div>
+
+              <div className="pt-3">
+                <button
+                  className="px-3 py-2 rounded-md bg-primary text-white w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (typeof onSimulateImpact === 'function') onSimulateImpact(asteroid);
+                  }}
+                >
+                  Simular Impacto
+                </button>
               </div>
             </div>
           </div>
@@ -668,7 +684,7 @@ function Stars() {
   );
 }
 
-function Scene({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, controlsRef, focusedAsteroid }: Globe3DProps) {
+function Scene({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, controlsRef, focusedAsteroid, onSimulateImpact }: Globe3DProps) {
   return (
     <>
       {/* Camera controller for smooth transitions */}
@@ -708,7 +724,7 @@ function Scene({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, contr
       {/* Earth */}
       <Earth />
 
-      {/* Asteroids */}
+      {/* Asteroids - hide during impact animation */}
       {asteroids.map((asteroid, index) => (
         <Asteroid
           key={asteroid.id}
@@ -717,6 +733,7 @@ function Scene({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, contr
           onClick={() => onAsteroidClick?.(asteroid)}
           isSelected={selectedAsteroid?.id === asteroid.id}
           isFocused={focusedAsteroid?.id === asteroid.id}
+          onSimulateImpact={onSimulateImpact}
         />
       ))}
 
@@ -735,7 +752,7 @@ function Scene({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, contr
   );
 }
 
-export function Globe3D({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, controlsRef, focusedAsteroid }: Globe3DProps) {
+export function Globe3D({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, controlsRef, focusedAsteroid, onSimulateImpact }: Globe3DProps) {
   return (
     <div className="w-full h-full bg-gradient-to-b from-[#000000] via-[#0a0e1a] to-[#1a1f35]">
       <Canvas
@@ -757,6 +774,7 @@ export function Globe3D({ asteroids, onAsteroidClick, selectedAsteroid, autoRota
           autoRotate={autoRotate}
           controlsRef={controlsRef}
           focusedAsteroid={focusedAsteroid}
+          onSimulateImpact={onSimulateImpact}
         />
       </Canvas>
     </div>
