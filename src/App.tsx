@@ -29,8 +29,9 @@ import {
   fetchRealNASAData,
   getAllAsteroidsFromRealData,
 } from "./utils/realNasaApi";
-import { AsteroidPanel } from "./components/AsteroidPanel";
+import { AsteroidPanel } from "./components/LeftPanel";
 import { cn } from "./components/ui/utils";
+import { RightPanel } from "./components/RighPanel";
 
 type ViewMode = "2d" | "3d" | "animation";
 
@@ -378,75 +379,20 @@ export default function App() {
 
         {/* Side Panel - hidden during animation */}
         {viewMode !== "animation" && (
-          <div className="w-96 border-l border-border/50 bg-muted/20 overflow-hidden flex flex-col">
-            <Tabs defaultValue="tracking" className="flex-1 flex flex-col">
-              <div className="border-b border-border/50 px-4 pt-4">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="tracking">
-                    <Satellite className="w-4 h-4 mr-2" />
-                    Tracking
-                  </TabsTrigger>
-                  <TabsTrigger value="simulation">
-                    <Globe2 className="w-4 h-4 mr-2" />
-                    Simulation
-                  </TabsTrigger>
-                </TabsList>
-              </div>
+  <RightPanel
+    asteroids={asteroids}
+    selectedAsteroid={selectedAsteroid}
+    onAsteroidSelect={handleAsteroidSelect}
+    impactPoint={impactPoint}
+    handleSimulate={handleSimulate}
+    simulationResults={simulationResults || undefined}
+    onClearSelection={() => {
+      setSelectedAsteroid(null);
+      setFocusedAsteroid(null);
+    }}
+  />
+)}
 
-              <TabsContent
-                value="tracking"
-                className="flex-1 overflow-hidden mt-0"
-              >
-                <div className="h-full flex flex-col">
-                  {selectedAsteroid ? (
-                    <div className="flex-1 overflow-y-auto p-4">
-                      <AsteroidDetails
-                        asteroid={selectedAsteroid}
-                        onSimulateImpact={handleSimulateAsteroidImpact}
-                        onFocusInView={handleFocusAsteroid}
-                      />
-                      <Button
-                        variant="outline"
-                        className="w-full mt-4"
-                        onClick={() => {
-                          setSelectedAsteroid(null);
-                          setFocusedAsteroid(null);
-                        }}
-                      >
-                        Back to List
-                      </Button>
-                    </div>
-                  ) : (
-                    <AsteroidList
-                      asteroids={asteroids}
-                      onAsteroidSelect={handleAsteroidSelect}
-                      selectedAsteroid={selectedAsteroid}
-                    />
-                  )}
-                </div>
-              </TabsContent>
-
-              <TabsContent
-                value="simulation"
-                className="flex-1 overflow-y-auto mt-0"
-              >
-                <div className="p-4 space-y-4">
-                  <AsteroidControls
-                    onSimulate={handleSimulate}
-                    impactPoint={impactPoint}
-                  />
-
-                  {simulationResults && (
-                    <ImpactResults
-                      params={simulationResults.params}
-                      impactPoint={simulationResults.impactPoint}
-                    />
-                  )}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        )}
       </div>
     </div>
   );
