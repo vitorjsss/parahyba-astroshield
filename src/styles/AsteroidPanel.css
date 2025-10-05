@@ -1,4 +1,25 @@
-/* Painel externo */
+/* === Painel lateral principal (deslizante à esquerda) === */
+.left-panel-wrapper {
+  position: fixed;
+  top: 80px;
+  left: 10px;
+  /* give a small offset so the button isn't offscreen when collapsed */
+  width: 340px;
+  /* includes accordion and button width area */
+  height: auto;
+  max-height: 80vh;
+  display: flex;
+  align-items: flex-start;
+  z-index: 998;
+  transform: translateX(-320px);
+  /* hide mostly offscreen when collapsed */
+  transition: transform 0.35s ease-in-out;
+}
+
+.left-panel-wrapper.expanded {
+  transform: translateX(0);
+}
+
 .asteroid-panel {
   position: absolute;
   top: 20px;
@@ -37,7 +58,59 @@
   background-color: rgba(0, 0, 0, 0.3);
 }
 
-/* Cards internos */
+/* Scrollbar personalizada para o painel principal */
+.asteroid-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.asteroid-panel::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.asteroid-panel::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+  border: none;
+}
+
+.asteroid-panel::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* === Botão fixo para abrir/fechar painel === */
+.left-toggle-btn {
+  position: absolute;
+  /* positioned relative to .left-panel-wrapper */
+  right: -58px;
+  /* hang outside the panel edge */
+  top: 12px;
+  z-index: 999;
+  height: 36px;
+  width: 62px;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 9999px;
+  padding: 0.6rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.left-toggle-btn:hover {
+  background-color: #f3f4f6;
+  transform: scale(1.05);
+}
+
+.left-toggle-btn svg {
+  color: #111;
+  transition: transform 0.3s ease;
+}
+
+/* === Cartões internos === */
 .asteroid-card {
   border: 1px solid #ddd;
   border-radius: 12px;
@@ -51,13 +124,12 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Cards específicos Globe3DControls */
 .asteroid-card-globe {
   background: linear-gradient(135deg, #f9f9f9, #e0f7fa);
   border: 1px solid #b2ebf2;
 }
 
-/* Botão de expandir/recolher */
+/* === Botões de expandir/recolher dentro do painel === */
 .card-toggle {
   width: 100%;
   display: flex;
@@ -92,7 +164,7 @@
   color: #333;
 }
 
-/* Layout interno de controles */
+/* === Layout interno de controles === */
 .control-row {
   display: flex;
   justify-content: space-between;
@@ -127,7 +199,7 @@
   transform: scale(1.03);
 }
 
-/* Informações de mouse e teclado */
+/* Informações adicionais */
 .control-info {
   margin-top: 12px;
   font-size: 13px;
@@ -145,6 +217,7 @@
   font-weight: 600;
 }
 
+/* Status de asteroides */
 .safe {
   color: #28a745;
   /* verde */
@@ -278,7 +351,6 @@
 
   .ac-slider {
     width: 100%;
-    appearance: none;
     -webkit-appearance: none;
     height: 6px;
     background: #ccc;
