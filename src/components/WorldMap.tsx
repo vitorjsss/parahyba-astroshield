@@ -8,9 +8,12 @@ interface WorldMapProps {
   onMapClick?: (coordinates: [number, number]) => void;
   impactPoint?: [number, number] | null;
   selectedAsteroid?: NASAAsteroid | null;
+  impactResults?: {
+    crater_diameter_km: number;
+  };
 }
 
-export function WorldMap({ onMapClick, impactPoint, selectedAsteroid }: WorldMapProps) {
+export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResults }: WorldMapProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -131,10 +134,50 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid }: WorldMap
     if (impactPoint) {
       const coords = projection(impactPoint);
       if (coords) {
+        // Determinar o raio do círculo com base no crater_diameter_km
+        // Valor padrão de 50 se não houver seleção ou valor de raio
+        let circleRadius = 50;
+        
+        // Fator de escala - multiplica o valor em km para obter pixels no mapa
+        // Este fator pode ser ajustado conforme necessário para melhor visualização
+        const scaleFactor = width / 50; 
+        const kmToPixelRatio = scaleFactor;
+        
+        // Se temos resultados de impacto com diâmetro da cratera, usamos esse valor
+        if (impactResults && impactResults.crater_diameter_km) {
+          // crater_diameter_km já é o diâmetro completo, precisamos do raio
+          const craterRadius = impactResults.crater_diameter_km / 2;
+          
+          // Convertemos km para pixels na escala do mapa
+          circleRadius = craterRadius * kmToPixelRatio;
+          
+          // Garantir um mínimo visível e um máximo razoável
+          circleRadius = Math.max(30, Math.min(circleRadius, width / 3));
+        }
+        // Se não temos os resultados mas temos um asteroide selecionado, fazemos uma estimativa
+        else if (selectedAsteroid) {
+          // Pegamos o diâmetro médio em metros e convertemos para km
+          const asteroidDiameter = (selectedAsteroid.estimated_diameter.meters.estimated_diameter_min + 
+                                   selectedAsteroid.estimated_diameter.meters.estimated_diameter_max) / 2 / 1000;
+          
+          // Velocidade aproximada em km/s
+          const velocity = parseFloat(selectedAsteroid.close_approach_data[0].relative_velocity.kilometers_per_second);
+          
+          // Estimativa simples de raio da cratera: 10-20x o diâmetro do asteroide
+          // Esta é uma aproximação muito básica
+          const estimatedCraterRadius = asteroidDiameter * 15 * (velocity / 20); // Fator de escala com velocidade
+          
+          // Ajuste final para pixels no mapa
+          circleRadius = estimatedCraterRadius * kmToPixelRatio;
+          
+          // Garantir um mínimo visível e um máximo razoável
+          circleRadius = Math.max(30, Math.min(circleRadius, width / 3));
+        }
+        
         g.append("circle")
           .attr("cx", coords[0])
           .attr("cy", coords[1])
-          .attr("r", 50)
+          .attr("r", circleRadius)
           .attr("fill", "#ef4444")
           .attr("opacity", 0.3);
         g.append("circle")

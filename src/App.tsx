@@ -309,6 +309,7 @@ export default function App() {
                 onMapClick={handleMapClick}
                 impactPoint={impactPoint}
                 selectedAsteroid={selectedAsteroid}
+                impactResults={simulationResults?.api}
               />
               {!impactPoint && !selectedAsteroid && (
                 <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">
