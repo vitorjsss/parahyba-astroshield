@@ -37,7 +37,7 @@ export function AsteroidList({
           <InfoTooltip
             content="Asteroids or comets that pass close to Earth."
             size="lg"
-            position="right"
+            position="bottom"
           />
         </h3>
         <span>{asteroids.length} asteroids</span>
@@ -63,45 +63,49 @@ export function AsteroidList({
               </div>
               <div className="asteroid-info">
                 <p>
-                  Diameter:
-                  <InfoTooltip
-                    content="Asteroid's diameter in meters — larger means more impact energy."
-                    size="lg"
-                    position="right"
-                  />
-                  {diameter.toFixed(0)} m
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '4px', verticalAlign: 'middle' }}>
+                    <InfoTooltip
+                      content="Asteroid's diameter in meters — larger means more impact energy."
+                      size="md"
+                      position="right"
+                    />
+                    Diameter: {diameter.toFixed(0)} m
+                  </label>
                 </p>
                 <p>
-                  Velocity:
-                  <InfoTooltip
-                    content="Asteroid's speed as it approaches Earth (km/s)."
-                    size="lg"
-                    position="right"
-                  />
-                  {velocity.toFixed(2)} km/s
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '4px', verticalAlign: 'middle' }}>
+                    <InfoTooltip
+                      content="Asteroid's speed as it approaches Earth (km/s)."
+                      size="md"
+                      position="right"
+                    />
+                    Velocity: {velocity.toFixed(2)} km/s
+                  </label>
                 </p>
                 <p>
-                  Approach:
-                  <InfoTooltip
-                    content="Date of the asteroid's closest approach to Earth."
-                    size="lg"
-                    position="right"
-                  />
-                  {closeApproach.close_approach_date}
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '4px', verticalAlign: 'middle' }}>
+                    <InfoTooltip
+                      content="Date of the asteroid's closest approach to Earth."
+                      size="md"
+                      position="right"
+                    />
+                    Approach: {closeApproach.close_approach_date}
+                  </label>
                 </p>
                 <p>
-                  Miss Distance:
-                  <InfoTooltip
-                    content="Predicted minimum distance between the asteroid and Earth."
-                    size="lg"
-                    position="right"
-                  />
-                  {(missDistanceKm / 1000).toFixed(0)}k km /{' '}
-                  {parseFloat(closeApproach.miss_distance.lunar).toFixed(2)} LD
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '4px', verticalAlign: 'middle' }}>
+                    <InfoTooltip
+                      content="Predicted minimum distance between the asteroid and Earth."
+                      size="md"
+                      position="right"
+                    />
+                    Miss Distance: {(missDistanceKm / 1000).toFixed(0)}k km /{' '}
+                    {parseFloat(closeApproach.miss_distance.lunar).toFixed(2)} LD
+                  </label>
                 </p>
                 {asteroid.is_potentially_hazardous_asteroid && (
                   <p className="hazardous">
-                    ⚠️ Potentially Hazardous
+                    ⚠ Potentially Hazardous
                     <InfoTooltip
                       content="Large asteroids passing within 7.5 million km of Earth."
                       size="lg"
