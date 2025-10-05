@@ -622,7 +622,7 @@ function Scene({ asteroids, onAsteroidClick, selectedAsteroid, autoRotate, contr
           onClick={() => onAsteroidClick?.(asteroid)}
           isSelected={selectedAsteroid?.id === asteroid.id}
           isFocused={focusedAsteroid?.id === asteroid.id}
-          onSimulateImpact={onSimulateImpact}
+          onSimulateImpact={() => onSimulateImpact && onSimulateImpact(asteroid)}
         />
       ))}
 

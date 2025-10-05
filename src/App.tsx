@@ -231,6 +231,9 @@ export default function App() {
         impactPoint: [randomLng, randomLat],
       });
 
+      // Keep the asteroid selected for the 2D view
+      setSelectedAsteroid(showImpactAnimation);
+
       // Clean up animation state
       setShowImpactAnimation(null);
 
@@ -276,15 +279,6 @@ export default function App() {
                 3D Globe
               </Button>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadNASAData}
-              disabled={loading}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              {loading ? "Carregando..." : "Load Real NASA Datas "}
-            </Button>
           </div>
         </div>
       </header>
@@ -306,8 +300,9 @@ export default function App() {
               <WorldMap
                 onMapClick={handleMapClick}
                 impactPoint={impactPoint}
+                selectedAsteroid={selectedAsteroid}
               />
-              {!impactPoint && (
+              {!impactPoint && !selectedAsteroid && (
                 <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">
                   <p className="opacity-80">
                     Click anywhere on the map to set the asteroid impact
@@ -315,8 +310,26 @@ export default function App() {
                   </p>
                 </div>
               )}
+              {!impactPoint && selectedAsteroid && (
+                <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">
+                  <p className="opacity-80">
+                    <span className="text-primary font-medium">{selectedAsteroid.name}</span> impact simulation completed!
+                    Click anywhere on the map to change the impact location
+                  </p>
+                </div>
+              )}
               {impactPoint && (
                 <div className="absolute bottom-6 left-6 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-4 py-2">
+                  {selectedAsteroid && (
+                    <div className="mb-2 pb-2 border-b border-border/30">
+                      <p className="opacity-60">Simulated Asteroid:</p>
+                      <p className="font-medium text-primary">{selectedAsteroid.name}</p>
+                      <p className="text-xs opacity-80">
+                        {selectedAsteroid.estimated_diameter.meters.estimated_diameter_min.toFixed(0)}m diameter •
+                        {parseFloat(selectedAsteroid.close_approach_data[0].relative_velocity.kilometers_per_second).toFixed(1)} km/s
+                      </p>
+                    </div>
+                  )}
                   <p className="opacity-60">Impact Coordinates:</p>
                   <p className="font-mono">
                     {impactPoint[1].toFixed(4)}°, {impactPoint[0].toFixed(4)}°

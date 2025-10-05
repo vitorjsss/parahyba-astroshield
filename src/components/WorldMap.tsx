@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { feature } from "topojson-client";
 import { UsersIcon } from "lucide-react";
+import { NASAAsteroid } from "../types/nasa";
 
 interface WorldMapProps {
   onMapClick?: (coordinates: [number, number]) => void;
   impactPoint?: [number, number] | null;
+  selectedAsteroid?: NASAAsteroid | null;
 }
 
-export function WorldMap({ onMapClick, impactPoint }: WorldMapProps) {
+export function WorldMap({ onMapClick, impactPoint, selectedAsteroid }: WorldMapProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -226,11 +228,9 @@ export function WorldMap({ onMapClick, impactPoint }: WorldMapProps) {
 
               if (tooltipRef.current) {
                 const pop = populationCacheRef.current[key];
-                tooltipRef.current.innerHTML = `<div style="font-weight:600">${
-                  d.name
-                }</div>
-                  <div style="margin-top:4px">População (estado): ${
-                    pop == null ? "Carregando..." : pop.toLocaleString()
+                tooltipRef.current.innerHTML = `<div style="font-weight:600">${d.name
+                  }</div>
+                  <div style="margin-top:4px">População (estado): ${pop == null ? "Carregando..." : pop.toLocaleString()
                   }</div>`;
                 tooltipRef.current.style.display = "block";
               }
@@ -274,6 +274,71 @@ export function WorldMap({ onMapClick, impactPoint }: WorldMapProps) {
           <UsersIcon />
         </button>
       </div>
+
+      {/* Asteroid Information Panel
+      {selectedAsteroid && (
+        <div style={{
+          position: "absolute",
+          top: 12,
+          right: 12,
+          zIndex: 1000,
+          background: "rgba(17, 24, 39, 0.95)",
+          backdropFilter: "blur(8px)",
+          color: "#fff",
+          padding: "16px",
+          borderRadius: 12,
+          border: "1px solid rgba(75, 85, 99, 0.3)",
+          boxShadow: "0 8px 25px rgba(0,0,0,0.4)",
+          minWidth: "280px",
+          maxWidth: "320px"
+        }}>
+          <div style={{ marginBottom: "12px" }}>
+            <h3 style={{
+              margin: 0,
+              fontSize: "16px",
+              fontWeight: 600,
+              color: selectedAsteroid.is_potentially_hazardous_asteroid ? "#ef4444" : "#60a5fa"
+            }}>
+              {selectedAsteroid.name}
+            </h3>
+            {selectedAsteroid.is_potentially_hazardous_asteroid && (
+              <div style={{
+                marginTop: "4px",
+                padding: "2px 8px",
+                background: "rgba(239, 68, 68, 0.2)",
+                border: "1px solid rgba(239, 68, 68, 0.3)",
+                borderRadius: 4,
+                fontSize: "12px",
+                display: "inline-block",
+                color: "#fecaca"
+              }}>
+                ⚠️ Potentially Hazardous
+              </div>
+            )}
+          </div>
+
+          <div style={{ fontSize: "14px", lineHeight: "1.4", opacity: 0.9 }}>
+            <div style={{ marginBottom: "8px" }}>
+              <strong>Diameter:</strong> {selectedAsteroid.estimated_diameter.meters.estimated_diameter_min.toFixed(0)} - {selectedAsteroid.estimated_diameter.meters.estimated_diameter_max.toFixed(0)} m
+            </div>
+            <div style={{ marginBottom: "8px" }}>
+              <strong>Velocity:</strong> {parseFloat(selectedAsteroid.close_approach_data[0].relative_velocity.kilometers_per_second).toFixed(2)} km/s
+            </div>
+            <div style={{ marginBottom: "8px" }}>
+              <strong>Miss Distance:</strong> {parseFloat(selectedAsteroid.close_approach_data[0].miss_distance.kilometers).toLocaleString()} km
+            </div>
+            <div style={{ marginBottom: "8px" }}>
+              <strong>Close Approach:</strong> {new Date(selectedAsteroid.close_approach_data[0].close_approach_date).toLocaleDateString()}
+            </div>
+            <div style={{ marginTop: "12px", paddingTop: "8px", borderTop: "1px solid rgba(75, 85, 99, 0.3)" }}>
+              <div style={{ fontSize: "12px", opacity: 0.8 }}>
+                <div>Magnitude: {selectedAsteroid.absolute_magnitude_h.toFixed(2)} H</div>
+                <div>JPL ID: {selectedAsteroid.neo_reference_id}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )} */}
     </div>
   );
 }
