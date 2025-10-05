@@ -65,9 +65,9 @@ export function AsteroidPanel({
         aria-expanded={expanded}
       >
         {expanded ? (
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-4 h-4" />
         ) : (
-          <ChevronRight className="w-6 h-6" />
+          <ChevronRight className="w-4 h-4" />
         )}
       </button>
     </div>
