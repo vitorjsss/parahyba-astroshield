@@ -137,6 +137,14 @@ export default function App() {
     setSimulationResults(null);
   };
 
+  const handleClearSimulation = () => {
+    setImpactPoint(null);
+    setSimulationResults(null);
+    setSelectedAsteroid(null);
+    setFocusedAsteroid(null);
+    setShowImpactAnimation(null);
+  };
+
   const handleSimulate = async (params: AsteroidParams) => {
     if (!impactPoint) return;
     // Optimistic local result first
@@ -226,9 +234,10 @@ export default function App() {
         closeApproach.relative_velocity.kilometers_per_second
       );
 
-      const randomLat = (Math.random() - 0.5) * 160;
-      const randomLng = (Math.random() - 0.5) * 360;
-      setImpactPoint([randomLng, randomLat]);
+      // ✅ Calcula posição realística baseada na trajetória do asteroide
+      const realisticImpactPoint =
+        calculateBestImpactPoint(showImpactAnimation);
+      setImpactPoint(realisticImpactPoint);
 
       setSimulationResults({
         params: {
@@ -309,9 +318,11 @@ export default function App() {
                 onMapClick={handleMapClick}
                 impactPoint={impactPoint}
                 selectedAsteroid={selectedAsteroid}
+                impactResults={simulationResults?.api}
+                onClearSimulation={handleClearSimulation}
               />
               {!impactPoint && !selectedAsteroid && (
-                <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">
                   <p className="opacity-80">
                     Click anywhere on the map to set the asteroid impact
                     location
@@ -321,8 +332,11 @@ export default function App() {
               {!impactPoint && selectedAsteroid && (
                 <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">
                   <p className="opacity-80">
-                    <span className="text-primary font-medium">{selectedAsteroid.name}</span> impact simulation completed!
-                    Click anywhere on the map to change the impact location
+                    <span className="text-primary font-medium">
+                      {selectedAsteroid.name}
+                    </span>{" "}
+                    impact simulation completed! Click anywhere on the map to
+                    change the impact location
                   </p>
                 </div>
               )}
@@ -331,10 +345,19 @@ export default function App() {
                   {selectedAsteroid && (
                     <div className="mb-2 pb-2 border-b border-border/30">
                       <p className="opacity-60">Simulated Asteroid:</p>
-                      <p className="font-medium text-primary">{selectedAsteroid.name}</p>
+                      <p className="font-medium text-primary">
+                        {selectedAsteroid.name}
+                      </p>
                       <p className="text-xs opacity-80">
-                        {selectedAsteroid.estimated_diameter.meters.estimated_diameter_min.toFixed(0)}m diameter •
-                        {parseFloat(selectedAsteroid.close_approach_data[0].relative_velocity.kilometers_per_second).toFixed(1)} km/s
+                        {selectedAsteroid.estimated_diameter.meters.estimated_diameter_min.toFixed(
+                          0
+                        )}
+                        m diameter •
+                        {parseFloat(
+                          selectedAsteroid.close_approach_data[0]
+                            .relative_velocity.kilometers_per_second
+                        ).toFixed(1)}{" "}
+                        km/s
                       </p>
                     </div>
                   )}
@@ -435,13 +458,16 @@ export default function App() {
               // Se estiver no modo 2D e houver um ponto de impacto, simula o impacto
               if (viewMode === "2d" && impactPoint) {
                 const closeApproach = asteroid.close_approach_data[0];
-                const diameter = asteroid.estimated_diameter.meters.estimated_diameter_min;
-                const velocity = parseFloat(closeApproach.relative_velocity.kilometers_per_second);
+                const diameter =
+                  asteroid.estimated_diameter.meters.estimated_diameter_min;
+                const velocity = parseFloat(
+                  closeApproach.relative_velocity.kilometers_per_second
+                );
 
                 handleSimulate({
                   diameter,
                   velocity,
-                  density: 3000
+                  density: 3000,
                 });
               }
               // Se não houver ponto de impacto, apenas seleciona o asteroide
