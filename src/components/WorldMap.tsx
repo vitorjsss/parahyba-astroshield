@@ -209,6 +209,21 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
         .then((res) => res.json())
         .then((usTopo: any) => {
           const states = feature(usTopo, usTopo.objects.states) as any;
+
+          // ✨ Adicionar as linhas de fronteira dos estados
+          popLayerG
+            .append("g")
+            .attr("class", "us-states-boundaries")
+            .selectAll("path")
+            .data(states.features)
+            .enter()
+            .append("path")
+            .attr("d", path as any)
+            .attr("fill", "none")
+            .attr("stroke", "#ef4444")
+            .attr("stroke-width", 0.2)
+            .attr("stroke-opacity", 0.4)
+
           const statePoints = states.features
             .map((f: any) => {
               const c = d3.geoCentroid(f);

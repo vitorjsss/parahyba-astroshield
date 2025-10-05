@@ -2,13 +2,15 @@
 .ac-card {
   display: flex;
   flex-direction: column;
-  background-color: #fff; /* Branco */
-  color: #000;            /* Preto */
+  background-color: #fff;
+  /* Branco */
+  color: #000;
+  /* Preto */
   border-radius: 8px;
   border: 1px solid #ccc;
   padding: 16px;
   width: 100%;
-  height: 100%;
+  margin-bottom: 20px;
   box-sizing: border-box;
   overflow: hidden;
   font-family: "Segoe UI", sans-serif;

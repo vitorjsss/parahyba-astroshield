@@ -22,6 +22,8 @@ interface RightPanelProps {
     api?: ImpactApiResult;
   };
   onClearSelection?: () => void;
+  viewMode: '2d' | '3d' | 'animation';
+  onSimulateImpact?: (asteroid: NASAAsteroid) => void;
 }
 
 export function RightPanel({
@@ -32,12 +34,35 @@ export function RightPanel({
   handleSimulate,
   simulationResults,
   onClearSelection,
+  viewMode,
+  onSimulateImpact,
 }: RightPanelProps) {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"tracking" | "simulation">(
     "tracking"
   );
   const [hovered, setHovered] = useState(false);
+
+  // Função para converter asteroide em AsteroidParams e chamar onSimulate
+  const handleAsteroidSimulate = (asteroid: NASAAsteroid) => {
+    if (!impactPoint) return;
+
+    const closeApproach = asteroid.close_approach_data[0];
+    const asteroidParams: AsteroidParams = {
+      diameter: asteroid.estimated_diameter.meters.estimated_diameter_min,
+      velocity: parseFloat(closeApproach.relative_velocity.kilometers_per_second),
+      density: 3000, // Densidade padrão para asteroides rochosos
+    };
+
+    // Chama a função de simulação com os parâmetros do asteroide
+    handleSimulate(asteroidParams);
+
+    // Também chama a função específica para asteroides se existir
+    onSimulateImpact?.(asteroid);
+
+    // Muda para a aba de simulação
+    setActiveTab("simulation");
+  };
 
   return (
     <div className="right-panel-container">
@@ -76,38 +101,23 @@ export function RightPanel({
           </button>
         </div>
 
-        <div className="tab-content flex-1 flex flex-col">
+        <div className="tab-content flex-1 flex flex-col overflow-hidden">
           {activeTab === "tracking" && (
-            <div className="tracking-tab flex-1 flex flex-col">
-              <div className="tracking-scroll flex-1 overflow-y-auto">
-                {selectedAsteroid ? (
-                  <>
-                    <AsteroidList
-                      asteroids={asteroids}
-                      onAsteroidSelect={onAsteroidSelect}
-                      selectedAsteroid={selectedAsteroid}
-                    />
-                    <Button
-                      variant="outline"
-                      className="w-full mt-4"
-                      onClick={onClearSelection}
-                    >
-                      Back to List
-                    </Button>
-                  </>
-                ) : (
-                  <AsteroidList
-                    asteroids={asteroids}
-                    onAsteroidSelect={onAsteroidSelect}
-                    selectedAsteroid={selectedAsteroid}
-                  />
-                )}
-              </div>
+            <div className="tracking-scroll p-4 overflow-y-auto h-full">
+              <AsteroidList
+                asteroids={asteroids}
+                onAsteroidSelect={onAsteroidSelect}
+                selectedAsteroid={selectedAsteroid}
+                maxHeight={9999}
+                viewMode={viewMode}
+                onSimulate={handleAsteroidSimulate}
+                impactPoint={impactPoint}
+              />
             </div>
           )}
 
           {activeTab === "simulation" && (
-            <div>
+            <div className="simulation-scroll p-4 overflow-y-auto h-full">
               <AsteroidControls
                 onSimulate={handleSimulate}
                 impactPoint={impactPoint}
