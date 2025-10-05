@@ -28,6 +28,7 @@ import {
   simulateAsteroidImpact,
   ImpactApiResult,
 } from "./utils/Api";
+import { calculateBestImpactPoint } from "./utils/asteroidTrajectory";
 
 type ViewMode = "2d" | "3d" | "animation";
 
@@ -185,10 +186,9 @@ export default function App() {
         closeApproach.relative_velocity.kilometers_per_second
       );
 
-      // Set random impact point
-      const randomLat = (Math.random() - 0.5) * 160;
-      const randomLng = (Math.random() - 0.5) * 360;
-      setImpactPoint([randomLng, randomLat]);
+      // ✅ Usa posição realística baseada na trajetória
+      const realisticImpactPoint = calculateBestImpactPoint(selectedAsteroid);
+      setImpactPoint(realisticImpactPoint);
 
       // Simulate impact with asteroid parameters
       setSimulationResults({
@@ -197,7 +197,7 @@ export default function App() {
           velocity,
           density: 3000,
         },
-        impactPoint: [randomLng, randomLat],
+        impactPoint: realisticImpactPoint,
       });
 
       // Switch to 2D view to show impact
@@ -226,9 +226,9 @@ export default function App() {
         closeApproach.relative_velocity.kilometers_per_second
       );
 
-      const randomLat = (Math.random() - 0.5) * 160;
-      const randomLng = (Math.random() - 0.5) * 360;
-      setImpactPoint([randomLng, randomLat]);
+      // ✅ Calcula posição realística baseada na trajetória do asteroide
+      const realisticImpactPoint = calculateBestImpactPoint(showImpactAnimation);
+      setImpactPoint(realisticImpactPoint);
 
       setSimulationResults({
         params: {
@@ -236,7 +236,7 @@ export default function App() {
           velocity,
           density: 3000,
         },
-        impactPoint: [randomLng, randomLat],
+        impactPoint: realisticImpactPoint,
       });
 
       // Keep the asteroid selected for the 2D view

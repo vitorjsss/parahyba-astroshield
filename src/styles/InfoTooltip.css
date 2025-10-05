@@ -1,0 +1,188 @@
+/* InfoTooltip.css */
+.info-tooltip-container {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.info-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
+}
+
+.info-icon-custom {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
+}
+
+.info-icon:hover,
+.info-icon-custom:hover {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25);
+}
+
+.info-icon:focus,
+.info-icon-custom:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Tooltip content */
+.info-tooltip-content {
+    position: absolute;
+    z-index: 1000;
+    min-width: 200px;
+    max-width: 300px;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(8px);
+    color: #ffffff;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: tooltipFadeIn 0.2s ease-out;
+    word-wrap: break-word;
+}
+
+@keyframes tooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Posicionamento */
+.info-tooltip-content.top {
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.info-tooltip-content.bottom {
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.info-tooltip-content.left {
+    right: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.info-tooltip-content.right {
+    left: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Setas do tooltip */
+.tooltip-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+}
+
+.info-tooltip-content.top .tooltip-arrow {
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid rgba(15, 23, 42, 0.95);
+}
+
+.info-tooltip-content.bottom .tooltip-arrow {
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid rgba(15, 23, 42, 0.95);
+}
+
+.info-tooltip-content.left .tooltip-arrow {
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 6px solid rgba(15, 23, 42, 0.95);
+}
+
+.info-tooltip-content.right .tooltip-arrow {
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-right: 6px solid rgba(15, 23, 42, 0.95);
+}
+
+/* Estilos para conteúdo do tooltip */
+.tooltip-text {
+    margin: 0;
+}
+
+.tooltip-text h4 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #60a5fa;
+}
+
+.tooltip-text p {
+    margin: 0 0 4px 0;
+}
+
+.tooltip-text ul {
+    margin: 4px 0;
+    padding-left: 16px;
+}
+
+.tooltip-text li {
+    margin-bottom: 2px;
+}
+
+.tooltip-text strong {
+    color: #fbbf24;
+}
+
+.tooltip-text em {
+    color: #a3a3a3;
+    font-style: italic;
+}
+
+/* Responsividade */
+@media (max-width: 640px) {
+    .info-tooltip-content {
+        min-width: 180px;
+        max-width: 250px;
+        font-size: 12px;
+        padding: 10px 12px;
+    }
+}
