@@ -68,6 +68,11 @@
   padding-bottom: 12px;
 }
 
+.ac-section h3 {
+  display: flex;
+  gap: 5px;
+}
+
 /* Slider simples */
 .ac-slider-group {
   display: flex;

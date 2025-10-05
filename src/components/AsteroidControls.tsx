@@ -271,7 +271,7 @@ export function AsteroidControls({
                 <InfoTooltip
                   content="Techniques to deflect the asteroid and prevent impact."
                   size="lg"
-                  position="right"
+                  position="bottom"
                 />
               </label>
             </h3>
