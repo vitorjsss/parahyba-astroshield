@@ -21,9 +21,13 @@ import {
 } from "./utils/realNasaApi";
 import { AsteroidPanel } from "./components/LeftPanel";
 import { cn } from "./components/ui/utils";
-import { RightPanel } from "./components/RighPanel";
-import { computeDamageRadiusBasicKm } from './utils/impact';
-import { simulateCustomImpact, simulateAsteroidImpact, ImpactApiResult } from './utils/Api';
+import { RightPanel } from "./components/RightPanel";
+import { computeDamageRadiusBasicKm } from "./utils/impact";
+import {
+  simulateCustomImpact,
+  simulateAsteroidImpact,
+  ImpactApiResult,
+} from "./utils/Api";
 
 type ViewMode = "2d" | "3d" | "animation";
 
@@ -141,7 +145,11 @@ export default function App() {
       let api: ImpactApiResult | undefined = undefined;
       // If there is a selected asteroid with an ID, prefer the asteroid endpoint; otherwise use custom
       if (selectedAsteroid && selectedAsteroid.id) {
-        api = await simulateAsteroidImpact({ asteroidId: selectedAsteroid.id, lat: impactPoint[1], lon: impactPoint[0] });
+        api = await simulateAsteroidImpact({
+          asteroidId: selectedAsteroid.id,
+          lat: impactPoint[1],
+          lon: impactPoint[0],
+        });
       } else {
         api = await simulateCustomImpact({
           diameter_m: params.diameter,
@@ -337,12 +345,21 @@ export default function App() {
                   {simulationResults ? (
                     <>
                       <p className="opacity-80 mt-1">
-                        Impact radius ~ {computeDamageRadiusBasicKm(simulationResults.params).toFixed(1)} km
+                        Impact radius ~{" "}
+                        {computeDamageRadiusBasicKm(
+                          simulationResults.params
+                        ).toFixed(1)}{" "}
+                        km
                       </p>
-                      <p className="opacity-60 text-xs">Concentric rings show severe/moderate/light/thermal zones</p>
+                      <p className="opacity-60 text-xs">
+                        Concentric rings show severe/moderate/light/thermal
+                        zones
+                      </p>
                     </>
                   ) : (
-                    <p className="opacity-60 mt-1">Press "Calculate Impact Effects" to compute radius</p>
+                    <p className="opacity-60 mt-1">
+                      Press "Calculate Impact Effects" to compute radius
+                    </p>
                   )}
                 </div>
               )}
@@ -415,7 +432,6 @@ export default function App() {
             }}
           />
         )}
-
       </div>
     </div>
   );
