@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { feature } from "topojson-client";
-import { UsersIcon } from "lucide-react";
+import { UsersIcon, ZoomInIcon, ZoomOutIcon, HandIcon } from "lucide-react";
 import { NASAAsteroid } from "../types/nasa";
 
 interface WorldMapProps {
@@ -18,9 +18,97 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [showPopLayer, setShowPopLayer] = useState(false);
+  const [isHandToolActive, setIsHandToolActive] = useState(false);
+  const zoomBehaviorRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
   const populationCacheRef = useRef<Record<string, number | null>>({});
   const fetchInProgressRef = useRef<Record<string, boolean>>({});
+  // Ref para armazenar a função onMapClick e evitar re-renderizações desnecessárias
+  const onMapClickRef = useRef(onMapClick);
+  
+  // Refs para manter referências aos elementos D3 sem precisar recriá-los
+  const mainGroupRef = useRef<d3.Selection<SVGGElement, unknown, null, undefined> | null>(null);
+  const projectionRef = useRef<d3.GeoProjection | null>(null);
+  const impactGroupRef = useRef<d3.Selection<SVGGElement, unknown, null, undefined> | null>(null);
+  const svgSelectionRef = useRef<d3.Selection<SVGSVGElement, unknown, null, undefined> | null>(null);
 
+  // Atualizamos a referência da função onMapClick sempre que ela mudar
+  useEffect(() => {
+    onMapClickRef.current = onMapClick;
+  }, [onMapClick]);
+  
+  // useEffect separado para gerenciar o ponto de impacto
+  useEffect(() => {
+    if (!impactGroupRef.current || !projectionRef.current || dimensions.width === 0) return;
+    
+    // Limpa o grupo de impacto atual
+    impactGroupRef.current.selectAll("*").remove();
+    
+    // Se não há ponto de impacto, simplesmente retorna
+    if (!impactPoint) return;
+    
+    const projection = projectionRef.current;
+    const coords = projection(impactPoint);
+    if (!coords) return;
+    
+    const width = dimensions.width;
+    
+    // Determinar o raio do círculo com base no crater_diameter_km
+    // Valor padrão de 50 se não houver seleção ou valor de raio
+    let circleRadius = 50;
+
+    // Fator de escala - multiplica o valor em km para obter pixels no mapa
+    // Este fator pode ser ajustado conforme necessário para melhor visualização
+    const scaleFactor = width / 50;
+    const kmToPixelRatio = scaleFactor;
+
+    // Se temos resultados de impacto com diâmetro da cratera, usamos esse valor
+    if (impactResults && impactResults.crater_diameter_km) {
+      // crater_diameter_km já é o diâmetro completo, precisamos do raio
+      const craterRadius = impactResults.crater_diameter_km / 2;
+
+      // Convertemos km para pixels na escala do mapa
+      circleRadius = craterRadius * kmToPixelRatio;
+
+      // Garantir um mínimo visível e um máximo razoável
+      circleRadius = Math.max(30, Math.min(circleRadius, width / 3));
+    }
+    // Se não temos os resultados mas temos um asteroide selecionado, fazemos uma estimativa
+    else if (selectedAsteroid) {
+      // Pegamos o diâmetro médio em metros e convertemos para km
+      const asteroidDiameter = (selectedAsteroid.estimated_diameter.meters.estimated_diameter_min +
+        selectedAsteroid.estimated_diameter.meters.estimated_diameter_max) / 2 / 1000;
+
+      // Velocidade aproximada em km/s
+      const velocity = parseFloat(selectedAsteroid.close_approach_data[0].relative_velocity.kilometers_per_second);
+
+      // Estimativa simples de raio da cratera: 10-20x o diâmetro do asteroide
+      // Esta é uma aproximação muito básica
+      const estimatedCraterRadius = asteroidDiameter * 15 * (velocity / 20); // Fator de escala com velocidade
+
+      // Ajuste final para pixels no mapa
+      circleRadius = estimatedCraterRadius * kmToPixelRatio;
+
+      // Garantir um mínimo visível e um máximo razoável
+      circleRadius = Math.max(30, Math.min(circleRadius, width / 3));
+    }
+
+    // Desenha os círculos de impacto sem reconstruir o mapa inteiro
+    impactGroupRef.current.append("circle")
+      .attr("cx", coords[0])
+      .attr("cy", coords[1])
+      .attr("r", circleRadius)
+      .attr("fill", "#ef4444")
+      .attr("opacity", 0.3);
+    impactGroupRef.current.append("circle")
+      .attr("cx", coords[0])
+      .attr("cy", coords[1])
+      .attr("r", 4)
+      .attr("fill", "#fef2f2")
+      .attr("stroke", "#991b1b")
+      .attr("stroke-width", 2);
+      
+  }, [impactPoint, selectedAsteroid, impactResults, dimensions.width]);
+  
   useEffect(() => {
     const updateDimensions = () => {
       if (svgRef.current) {
@@ -33,10 +121,50 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
     return () => window.removeEventListener("resize", updateDimensions);
   }, []);
 
+  // Effect to update hand tool behavior
+  useEffect(() => {
+    if (!svgSelectionRef.current || !zoomBehaviorRef.current) return;
+    
+    const svg = svgSelectionRef.current;
+    
+    if (isHandToolActive) {
+      // Enable dragging when hand tool is active
+      svg.style("cursor", "grab");
+      
+      // Re-configurar o comportamento de zoom para permitir arrasto
+      svg.call(zoomBehaviorRef.current.filter((event: any) => {
+        if (event.type === 'wheel') return false; // Ainda desabilita zoom por roda
+        if (event.type === 'mousedown' || event.type === 'touchstart') return true; // Permite arrasto
+        return !event.button;
+      }));
+    } else {
+      // Disable dragging when hand tool is inactive
+      svg.style("cursor", "default");
+      
+      // Re-configurar o comportamento de zoom para desabilitar arrasto
+      svg.call(zoomBehaviorRef.current.filter((event: any) => {
+        if (event.type === 'wheel') return false; // Ainda desabilita zoom por roda
+        if (event.type === 'mousedown' || event.type === 'touchstart') return false; // Desabilita arrasto
+        return !event.button;
+      }));
+    }
+    
+    // Atualizar handlers de mousedown/mouseup para cursor
+    svg.on("mousedown.cursor", function() {
+      if (isHandToolActive) d3.select(this).style("cursor", "grabbing");
+    });
+    
+    svg.on("mouseup.cursor", function() {
+      if (isHandToolActive) d3.select(this).style("cursor", "grab");
+    });
+    
+  }, [isHandToolActive]);
+
   useEffect(() => {
     if (!svgRef.current || dimensions.width === 0) return;
 
     const svg = d3.select(svgRef.current);
+    svgSelectionRef.current = svg; // Armazena a seleção SVG para uso posterior
     svg.selectAll("*").remove();
 
     // Tooltip
@@ -64,13 +192,39 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
       .translate([width / 2, height / 2]);
     const path = d3.geoPath().projection(projection);
 
+    // Create zoom behavior with full control over interactions
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
-      .scaleExtent([1, 8])
-      .on("zoom", (event) => {
+      .scaleExtent([1, 8]) // Min/max zoom levels
+      .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
         g.attr("transform", event.transform.toString());
+      })
+      // Definir um comportamento inicial de zoom - será atualizado pelo useEffect dedicado para o handTool
+      .filter((event: any) => {
+        // Desabilitar zoom por roda do mouse
+        if (event.type === 'wheel') return false;
+        
+        // Configuração inicial do comportamento de arrasto (será atualizado pelo useEffect específico)
+        if (event.type === 'mousedown' || event.type === 'touchstart') {
+          return false; // Inicialmente desabilitado
+        }
+        
+        // Permitir zoom programático por botões
+        return !event.button;
       });
-    svg.call(zoom as any);
+    
+    // Store the zoom behavior in the ref for access from buttons
+    zoomBehaviorRef.current = zoom;
+    
+    // Apply zoom behavior
+    svg.call(zoom)
+      // Prevent text selection during drag
+      .style("-webkit-user-select", "none")
+      .style("user-select", "none")
+      // Configurar cursor inicial (será atualizado pelo useEffect específico)
+      .style("cursor", "default")
+      // Disable double-click zoom behavior
+      .on("dblclick.zoom", null);
 
     const g = svg.append("g");
     g.append("rect")
@@ -121,80 +275,36 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
               .attr("stroke-width", 0.5);
           })
           .on("click", function (event, d: any) {
+            // Não permite gerar impactos quando a ferramenta de mão está ativa
+            if (isHandToolActive) return;
+            
             const [x, y] = d3.pointer(event, this);
             const coords = projection.invert?.([x, y]);
-            if (coords && onMapClick) onMapClick(coords as [number, number]);
+            if (coords && onMapClickRef.current) onMapClickRef.current(coords as [number, number]);
           });
 
         if (showPopLayer) drawPopulationLayer(popGroup, projection);
       })
       .catch((err) => console.error(err));
 
-    // Impact point
-    if (impactPoint) {
-      const coords = projection(impactPoint);
-      if (coords) {
-        // Determinar o raio do círculo com base no crater_diameter_km
-        // Valor padrão de 50 se não houver seleção ou valor de raio
-        let circleRadius = 50;
-
-        // Fator de escala - multiplica o valor em km para obter pixels no mapa
-        // Este fator pode ser ajustado conforme necessário para melhor visualização
-        const scaleFactor = width / 50;
-        const kmToPixelRatio = scaleFactor;
-
-        // Se temos resultados de impacto com diâmetro da cratera, usamos esse valor
-        if (impactResults && impactResults.crater_diameter_km) {
-          // crater_diameter_km já é o diâmetro completo, precisamos do raio
-          const craterRadius = impactResults.crater_diameter_km / 2;
-
-          // Convertemos km para pixels na escala do mapa
-          circleRadius = craterRadius * kmToPixelRatio;
-
-          // Garantir um mínimo visível e um máximo razoável
-          circleRadius = Math.max(30, Math.min(circleRadius, width / 3));
-        }
-        // Se não temos os resultados mas temos um asteroide selecionado, fazemos uma estimativa
-        else if (selectedAsteroid) {
-          // Pegamos o diâmetro médio em metros e convertemos para km
-          const asteroidDiameter = (selectedAsteroid.estimated_diameter.meters.estimated_diameter_min +
-            selectedAsteroid.estimated_diameter.meters.estimated_diameter_max) / 2 / 1000;
-
-          // Velocidade aproximada em km/s
-          const velocity = parseFloat(selectedAsteroid.close_approach_data[0].relative_velocity.kilometers_per_second);
-
-          // Estimativa simples de raio da cratera: 10-20x o diâmetro do asteroide
-          // Esta é uma aproximação muito básica
-          const estimatedCraterRadius = asteroidDiameter * 15 * (velocity / 20); // Fator de escala com velocidade
-
-          // Ajuste final para pixels no mapa
-          circleRadius = estimatedCraterRadius * kmToPixelRatio;
-
-          // Garantir um mínimo visível e um máximo razoável
-          circleRadius = Math.max(30, Math.min(circleRadius, width / 3));
-        }
-
-        g.append("circle")
-          .attr("cx", coords[0])
-          .attr("cy", coords[1])
-          .attr("r", circleRadius)
-          .attr("fill", "#ef4444")
-          .attr("opacity", 0.3);
-        g.append("circle")
-          .attr("cx", coords[0])
-          .attr("cy", coords[1])
-          .attr("r", 4)
-          .attr("fill", "#fef2f2")
-          .attr("stroke", "#991b1b")
-          .attr("stroke-width", 2);
-      }
-    }
+    // Criar um grupo específico para os pontos de impacto
+    const impactG = g.append("g").attr("class", "impact-group");
+    impactGroupRef.current = impactG;
+    
+    // Salvamos a projeção para uso em outros useEffect
+    projectionRef.current = projection;
+    
+    // Salvamos o grupo principal
+    mainGroupRef.current = g;
 
     svg.on("click", function (event) {
+      // Não permite gerar impactos quando a ferramenta de mão está ativa
+      if (isHandToolActive) return;
+      
       if (event.target === this || event.target.tagName === "rect") {
         const [x, y] = d3.pointer(event);
         const coords = projection.invert?.([x, y]);
-        if (coords && onMapClick) onMapClick(coords as [number, number]);
+        if (coords && onMapClickRef.current) onMapClickRef.current(coords as [number, number]);
       }
     });
 
@@ -306,16 +416,22 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
         })
         .catch((err) => console.error("Erro camada população:", err));
     }
-  }, [dimensions, impactPoint, onMapClick, showPopLayer]);
+  }, [dimensions, showPopLayer]); // removemos impactPoint, onMapClick e isHandToolActive das dependências
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <svg
         ref={svgRef}
         className="w-full h-full"
-        style={{ background: "#0f172a", display: "block" }}
+        style={{ 
+          background: "#0f172a", 
+          display: "block",
+          touchAction: "none" // Prevent default touch behaviors
+        }}
+        onWheel={(e) => e.preventDefault()} // Prevent default scroll behavior
       />
-      <div style={{ position: "absolute", top: 12, left: 12, zIndex: 1000 }}>
+      {/* Botão de camada de população no canto superior esquerdo */}
+      <div style={{ position: "absolute", top: 12, left: 12, zIndex: 1000, display: "flex", gap: "8px" }}>
         <button
           onClick={() => setShowPopLayer((prev) => !prev)}
           style={{
@@ -330,6 +446,71 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
           title="Ativar/Desativar camada de densidade populacional (EUA - aproximação)"
         >
           <UsersIcon />
+        </button>
+      </div>
+
+      {/* Botões de zoom e arrasto no canto inferior direito */}
+      <div style={{ position: "absolute", bottom: 12, right: 12, zIndex: 1000, display: "flex", gap: "8px" }}>
+        <button
+          onClick={() => {
+            if (zoomBehaviorRef.current && svgRef.current) {
+              const svg = d3.select(svgRef.current);
+              const currentTransform = d3.zoomTransform(svgRef.current);
+              const newScale = currentTransform.k * 1.3; // Zoom in by 30%
+              svg.transition().duration(300).call(zoomBehaviorRef.current.scaleTo, newScale);
+            }
+          }}
+          style={{
+            background: "#111827",
+            color: "#fff",
+            border: "none",
+            padding: "8px 12px",
+            borderRadius: 6,
+            cursor: "pointer",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
+          }}
+          title="Zoom In"
+        >
+          <ZoomInIcon />
+        </button>
+
+        <button
+          onClick={() => {
+            if (zoomBehaviorRef.current && svgRef.current) {
+              const svg = d3.select(svgRef.current);
+              const currentTransform = d3.zoomTransform(svgRef.current);
+              const newScale = currentTransform.k / 1.3; // Zoom out by 30%
+              svg.transition().duration(300).call(zoomBehaviorRef.current.scaleTo, newScale);
+            }
+          }}
+          style={{
+            background: "#111827",
+            color: "#fff",
+            border: "none",
+            padding: "8px 12px",
+            borderRadius: 6,
+            cursor: "pointer",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
+          }}
+          title="Zoom Out"
+        >
+          <ZoomOutIcon />
+        </button>
+
+        <button
+          onClick={() => setIsHandToolActive((prev) => !prev)}
+          style={{
+            background: isHandToolActive ? "#0284c7" : "#111827",
+            color: "#fff",
+            border: "none",
+            padding: "8px 12px",
+            borderRadius: 6,
+            cursor: "pointer",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
+          }}
+          title="Ativar/Desativar ferramenta mão para arrastar o mapa"
+        >
+          <HandIcon />
         </button>
       </div>
 
