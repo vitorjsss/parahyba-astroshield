@@ -28,7 +28,6 @@ import {
   simulateAsteroidImpact,
   ImpactApiResult,
 } from "./utils/Api";
-import { calculateBestImpactPoint } from "./utils/asteroidTrajectory";
 
 type ViewMode = "2d" | "3d" | "animation";
 
@@ -186,9 +185,10 @@ export default function App() {
         closeApproach.relative_velocity.kilometers_per_second
       );
 
-      // ✅ Usa posição realística baseada na trajetória
-      const realisticImpactPoint = calculateBestImpactPoint(selectedAsteroid);
-      setImpactPoint(realisticImpactPoint);
+      // Set random impact point
+      const randomLat = (Math.random() - 0.5) * 160;
+      const randomLng = (Math.random() - 0.5) * 360;
+      setImpactPoint([randomLng, randomLat]);
 
       // Simulate impact with asteroid parameters
       setSimulationResults({
@@ -197,7 +197,7 @@ export default function App() {
           velocity,
           density: 3000,
         },
-        impactPoint: realisticImpactPoint,
+        impactPoint: [randomLng, randomLat],
       });
 
       // Switch to 2D view to show impact
@@ -226,9 +226,9 @@ export default function App() {
         closeApproach.relative_velocity.kilometers_per_second
       );
 
-      // ✅ Calcula posição realística baseada na trajetória do asteroide
-      const realisticImpactPoint = calculateBestImpactPoint(showImpactAnimation);
-      setImpactPoint(realisticImpactPoint);
+      const randomLat = (Math.random() - 0.5) * 160;
+      const randomLng = (Math.random() - 0.5) * 360;
+      setImpactPoint([randomLng, randomLat]);
 
       setSimulationResults({
         params: {
@@ -236,7 +236,7 @@ export default function App() {
           velocity,
           density: 3000,
         },
-        impactPoint: realisticImpactPoint,
+        impactPoint: [randomLng, randomLat],
       });
 
       // Keep the asteroid selected for the 2D view
@@ -309,7 +309,6 @@ export default function App() {
                 onMapClick={handleMapClick}
                 impactPoint={impactPoint}
                 selectedAsteroid={selectedAsteroid}
-                impactResults={simulationResults?.api}
               />
               {!impactPoint && !selectedAsteroid && (
                 <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">

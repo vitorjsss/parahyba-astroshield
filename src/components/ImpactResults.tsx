@@ -1,7 +1,7 @@
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { AlertTriangle, Activity, Waves, Wind } from 'lucide-react';
-import { ImpactApiResult } from '../utils/Api';
+import { ImpactApiResult } from '../utils/api';
 
 interface ImpactResultsProps {
   impactPoint: [number, number];
