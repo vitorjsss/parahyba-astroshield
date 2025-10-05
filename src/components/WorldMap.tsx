@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { feature } from "topojson-client";
-import { UsersIcon, ZoomInIcon, ZoomOutIcon, HandIcon } from "lucide-react";
+import { UsersIcon, ZoomInIcon, ZoomOutIcon, HandIcon, XIcon } from "lucide-react";
 import { NASAAsteroid } from "../types/nasa";
 import { MultiImpactLegend } from "./MultiImpactLegend";
 import { ImpactApiResult } from "../utils/Api";
@@ -11,9 +11,10 @@ interface WorldMapProps {
   impactPoint?: [number, number] | null;
   selectedAsteroid?: NASAAsteroid | null;
   impactResults?: ImpactApiResult;
+  onClearSimulation?: () => void;
 }
 
-export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResults }: WorldMapProps) {
+export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResults, onClearSimulation }: WorldMapProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -256,7 +257,7 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
         circleRadius = estimatedCraterRadius * kmToPixelRatio;
         circleRadius = Math.max(30, Math.min(circleRadius, width / 3));
       }
-
+    }
 
     // 🎯 PONTO CENTRAL DE IMPACTO (sempre presente)
     impactGroupRef.current.append("circle")
@@ -700,14 +701,6 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
             circleRadius = estimatedCraterRadius * kmToPixelRatio;
             circleRadius = Math.max(30, Math.min(circleRadius, width / 3));
           }
-
-          // Círculo simples para casos sem dados completos
-          g.append("circle")
-            .attr("cx", coords[0])
-            .attr("cy", coords[1])
-            .attr("r", circleRadius)
-            .attr("fill", "#ef4444")
-            .attr("opacity", 0.3);
         }
 
         // 🎯 PONTO CENTRAL DE IMPACTO (sempre presente)
@@ -854,7 +847,7 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
         }}
         onWheel={(e) => e.preventDefault()} // Prevent default scroll behavior
       />
-      {/* Botão de camada de população no canto superior esquerdo */}
+      {/* Botões no canto superior esquerdo */}
       <div style={{ position: "absolute", top: 12, left: 12, zIndex: 1000, display: "flex", gap: "8px" }}>
         <button
           onClick={() => setShowPopLayer((prev) => !prev)}
@@ -871,6 +864,29 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
         >
           <UsersIcon />
         </button>
+
+        {/* Botão Limpar - aparece apenas quando há simulação ativa */}
+        {(impactPoint || selectedAsteroid || impactResults) && (
+          <button
+            onClick={() => {
+              if (onClearSimulation) {
+                onClearSimulation();
+              }
+            }}
+            style={{
+              background: "#dc2626",
+              color: "#fff",
+              border: "none",
+              padding: "8px 12px",
+              borderRadius: 6,
+              cursor: "pointer",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
+            }}
+            title="Limpar simulação de impacto e deselecionar asteroide"
+          >
+            <XIcon />
+          </button>
+        )}
       </div>
 
       {/* Legenda dos múltiplos círculos - aparece quando há simulação completa */}

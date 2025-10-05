@@ -138,6 +138,14 @@ export default function App() {
     setSimulationResults(null);
   };
 
+  const handleClearSimulation = () => {
+    setImpactPoint(null);
+    setSimulationResults(null);
+    setSelectedAsteroid(null);
+    setFocusedAsteroid(null);
+    setShowImpactAnimation(null);
+  };
+
   const handleSimulate = async (params: AsteroidParams) => {
     if (!impactPoint) return;
     // Optimistic local result first
@@ -311,6 +319,7 @@ export default function App() {
                 impactPoint={impactPoint}
                 selectedAsteroid={selectedAsteroid}
                 impactResults={simulationResults?.api}
+                onClearSimulation={handleClearSimulation}
               />
               {!impactPoint && !selectedAsteroid && (
                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">
