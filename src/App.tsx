@@ -430,6 +430,23 @@ export default function App() {
               setSelectedAsteroid(null);
               setFocusedAsteroid(null);
             }}
+            viewMode={viewMode}
+            onSimulateImpact={(asteroid) => {
+              // Se estiver no modo 2D e houver um ponto de impacto, simula o impacto
+              if (viewMode === "2d" && impactPoint) {
+                const closeApproach = asteroid.close_approach_data[0];
+                const diameter = asteroid.estimated_diameter.meters.estimated_diameter_min;
+                const velocity = parseFloat(closeApproach.relative_velocity.kilometers_per_second);
+
+                handleSimulate({
+                  diameter,
+                  velocity,
+                  density: 3000
+                });
+              }
+              // Se não houver ponto de impacto, apenas seleciona o asteroide
+              // O usuário precisará clicar no mapa para escolher um ponto
+            }}
           />
         )}
       </div>

@@ -124,4 +124,3 @@ export function AsteroidControls({ onSimulate, impactPoint }: AsteroidControlsPr
 }
 
 export type { AsteroidParams };
-
