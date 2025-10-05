@@ -257,14 +257,6 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
         circleRadius = Math.max(30, Math.min(circleRadius, width / 3));
       }
 
-      // Círculo simples para casos sem dados completos
-      impactGroupRef.current.append("circle")
-        .attr("cx", coords[0])
-        .attr("cy", coords[1])
-        .attr("r", circleRadius)
-        .attr("fill", "#ef4444")
-        .attr("opacity", 0.3);
-    }
 
     // 🎯 PONTO CENTRAL DE IMPACTO (sempre presente)
     impactGroupRef.current.append("circle")
