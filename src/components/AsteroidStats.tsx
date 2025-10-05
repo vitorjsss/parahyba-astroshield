@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { NASAAsteroid } from '../types/nasa';
+import { InfoTooltip } from './InfoTooltip';
 import '../styles/AsteroidPanel.css';
 
 interface AsteroidStatsProps {
@@ -28,23 +29,58 @@ export function AsteroidStats({ asteroids }: AsteroidStatsProps) {
       {isOpen && (
         <div className="card-content">
           <div className="control-row">
-            <span>Total Tracked</span>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', verticalAlign: 'middle' }}>
+              <InfoTooltip
+                content="Number of near-Earth objects currently being tracked."
+                size="md"
+                position="right"
+              />
+              Total Tracked
+            </label>
             <span>{totalCount}</span>
           </div>
           <div className="control-row">
-            <span>Hazardous</span>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', verticalAlign: 'middle' }}>
+              <InfoTooltip
+                content="Number of asteroids considered potentially dangerous."
+                size="md"
+                position="right"
+              />
+              Hazardous
+            </label>
             <span className="hazardous">{hazardousCount}</span>
           </div>
           <div className="control-row">
-            <span>Closest Approach</span>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', verticalAlign: 'middle' }}>
+              <InfoTooltip
+                content="The asteroid that will come closest to Earth."
+                size="md"
+                position="right"
+              />
+              Closest Approach
+            </label>
             <span className="closest">{closestAsteroid.name}</span>
           </div>
           <div className="control-row">
-            <span>Largest Object</span>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', verticalAlign: 'middle' }}>
+              <InfoTooltip
+                content="The largest asteroid in the monitored group."
+                size="md"
+                position="right"
+              />
+              Largest Object
+            </label>
             <span className="largest">{largestAsteroid.name}</span>
           </div>
           <div className="control-row">
-            <span>Average Size</span>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', verticalAlign: 'middle' }}>
+              <InfoTooltip
+                content="Average diameter of all tracked objects."
+                size="md"
+                position="right"
+              />
+              Average Size
+            </label>
             <span>{avgSize.toFixed(0)}m</span>
           </div>
         </div>

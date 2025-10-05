@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AsteroidParams } from "../types/AsteroidTypes";
 import { Target, Zap, Globe2 } from "lucide-react";
+import { InfoTooltip } from "./InfoTooltip";
 import "../styles/AsteroidControls.css";
 
 interface AsteroidControlsProps {
@@ -108,7 +109,7 @@ export function AsteroidControls({
       </div>
 
       {/* Tab content */}
-      <div className="ac-content">
+      <div className="ac-content" style={{ paddingTop: "10px" }}>
         {activeTab === "asteroid" && (
           <div className="ac-section">
             {[
@@ -136,9 +137,52 @@ export function AsteroidControls({
                 max: 8000,
                 step: 100,
               },
+              {
+                label: "Diameter (m)",
+                value: diameter,
+                setter: setDiameter,
+                min: 10,
+                max: 1000,
+                step: 10,
+                tooltip:
+                  "Asteroid's diameter in meters — larger means more impact energy.",
+              },
+              {
+                label: "Velocity (km/s)",
+                value: velocity,
+                setter: setVelocity,
+                min: 5,
+                max: 70,
+                step: 1,
+                tooltip: "Entry speed of the asteroid in Earth's atmosphere.",
+              },
+              {
+                label: "Density (kg/m³)",
+                value: density,
+                setter: setDensity,
+                min: 1000,
+                max: 8000,
+                step: 100,
+                tooltip: "Material density (rock, iron, ice, etc.).",
+              },
             ].map((item, idx) => (
               <div className="ac-slider-group" key={idx}>
                 <label>
+                  {item.label}: {item.value}
+                </label>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    verticalAlign: "middle",
+                  }}
+                >
+                  <InfoTooltip
+                    content={item.tooltip}
+                    size="md"
+                    position="right"
+                  />
                   {item.label}: {item.value}
                 </label>
                 <input
@@ -167,10 +211,63 @@ export function AsteroidControls({
                   ? "Regional devastation"
                   : "Global catastrophe"}
               </p>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  verticalAlign: "middle",
+                }}
+              >
+                <InfoTooltip
+                  content="Energy released upon collision, expressed in megatons of TNT."
+                  size="md"
+                  position="right"
+                />
+                Impact Energy
+              </label>
+              <p>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    verticalAlign: "middle",
+                  }}
+                >
+                  <InfoTooltip
+                    content="Converts released energy into megatons of TNT for easier understanding."
+                    size="md"
+                    position="right"
+                  />
+                  {energyMegatons.toFixed(2)} megatons TNT
+                </label>
+              </p>
+              <p>
+                {energyMegatons < 1
+                  ? "Small local impact"
+                  : energyMegatons < 100
+                  ? "Regional devastation"
+                  : "Global catastrophe"}
+              </p>
             </div>
 
             <div className="ac-box">
-              <h3>Impact Location</h3>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  verticalAlign: "middle",
+                }}
+              >
+                <InfoTooltip
+                  content="Latitude and longitude of the impact center."
+                  size="md"
+                  position="right"
+                />
+                Impact Location
+              </label>
               {impactPoint ? (
                 <p>
                   Lat: {impactPoint[1].toFixed(4)}, Lon:{" "}
@@ -185,7 +282,23 @@ export function AsteroidControls({
 
         {activeTab === "mitigation" && (
           <div className="ac-section">
-            <h3>Deflection Strategies</h3>
+            <h3>
+              Deflection Strategies
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  verticalAlign: "middle",
+                }}
+              >
+                <InfoTooltip
+                  content="Techniques to deflect the asteroid and prevent impact."
+                  size="lg"
+                  position="right"
+                />
+              </label>
+            </h3>
             <p>Simulate methods to alter trajectory and prevent impact.</p>
 
             <div className="ac-slider-group">

@@ -1,7 +1,8 @@
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { AlertTriangle, Activity, Waves, Wind } from 'lucide-react';
-import { ImpactApiResult } from '../utils/Api';
+import { InfoTooltip } from './InfoTooltip';
+import { ImpactApiResult } from '../utils/api';
 
 interface ImpactResultsProps {
   impactPoint: [number, number];
@@ -41,24 +42,66 @@ export function ImpactResults({ impactPoint, results }: ImpactResultsProps) {
           <AlertTriangle style={{ color: '#e53e3e' }} />
           <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>Impact Analysis</h2>
         </div>
-        <Badge variant={severity.variant}>{severity.text}</Badge>
+        <Badge variant={severity.variant}>
+          {severity.text}
+          <InfoTooltip
+            content="Indicates the severity level (mild, severe, catastrophic)."
+            size="lg"
+            position="right"
+          />
+        </Badge>
       </div>
 
       {/* Content */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {/* Energy Release */}
         <Section icon={<Activity />} title="Energy Release">
-          <p style={{ fontWeight: 600, fontSize: '1rem' }}>{energyMegatons.toFixed(2)} megatons TNT</p>
-          <p style={{ color: '#666', fontSize: '0.875rem' }}>Equivalent to {(energyMegatons / 15).toFixed(1)}x the Hiroshima bomb</p>
+          <p style={{ fontWeight: 600, fontSize: '1rem' }}>
+            {energyMegatons.toFixed(2)} megatons TNT
+            <InfoTooltip
+              content="Energy released upon collision, expressed in megatons of TNT."
+              size="lg"
+              position="right"
+            />
+          </p>
+          <p style={{ color: '#666', fontSize: '0.875rem' }}>
+            Equivalent to {(energyMegatons / 15).toFixed(1)}x the Hiroshima bomb
+            <InfoTooltip
+              content="Shows the force compared to historical nuclear bombs."
+              size="lg"
+              position="right"
+            />
+          </p>
         </Section>
 
         {/* Crater Formation */}
         <Section icon={<Target />} title="Crater Formation">
-          <p style={{ fontWeight: 600 }}>{(craterDiameterKm * 1000).toFixed(0)} meters diameter</p>
+          <p style={{ fontWeight: 600 }}>
+            {(craterDiameterKm * 1000).toFixed(0)} meters diameter
+            <InfoTooltip
+              content="Estimated diameter of the crater created by the impact."
+              size="lg"
+              position="right"
+            />
+          </p>
           {results.context && (
             <div style={{ paddingTop: '0.5rem', borderTop: '1px solid #eee' }}>
-              <p style={{ fontSize: '0.875rem' }}>Population affected: {results.context.population_estimated_affected.toLocaleString()}</p>
-              <p style={{ fontSize: '0.875rem' }}>Buildings within impact: ~{results.context.buildings_within_m.toFixed(0)} m</p>
+              <p style={{ fontSize: '0.875rem' }}>
+                Population affected: {results.context.population_estimated_affected.toLocaleString()}
+                <InfoTooltip
+                  content="Estimated number of people within the impact area."
+                  size="lg"
+                  position="right"
+                />
+              </p>
+              <p style={{ fontSize: '0.875rem' }}>
+                Buildings within impact: ~{results.context.buildings_within_m.toFixed(0)} m
+                <InfoTooltip
+                  content="Estimated number of buildings or structures within the hit zone."
+                  size="lg"
+                  position="right"
+                />
+              </p>
               <p style={{ fontSize: '0.875rem' }}>Buildings count: {results.context.buildings_count.toLocaleString()}</p>
             </div>
           )}
@@ -67,7 +110,14 @@ export function ImpactResults({ impactPoint, results }: ImpactResultsProps) {
 
         {/* Impact Radius */}
         <Section icon={<Activity />} title="Impact Radius">
-          <p>Crater diameter: {craterDiameterKm.toFixed(1)} km</p>
+          <p>
+            Crater diameter: {craterDiameterKm.toFixed(1)} km
+            <InfoTooltip
+              content="Total radius of destruction and generated heat."
+              size="lg"
+              position="right"
+            />
+          </p>
         </Section>
 
         {/* Seismic Activity */}
@@ -96,7 +146,14 @@ export function ImpactResults({ impactPoint, results }: ImpactResultsProps) {
 
         {/* Impact Zone */}
         <Section title="Impact Zone">
-          <p>Coordinates: {impactPoint[1].toFixed(2)}°N, {impactPoint[0].toFixed(2)}°E</p>
+          <p>
+            Coordinates: {impactPoint[1].toFixed(2)}°N, {impactPoint[0].toFixed(2)}°E
+            <InfoTooltip
+              content="Latitude and longitude of the impact center."
+              size="lg"
+              position="right"
+            />
+          </p>
           <p style={{ color: '#666', fontSize: '0.875rem' }}>Impact radius (map): ~{craterDiameterKm.toFixed(1)} km</p>
         </Section>
       </div>
