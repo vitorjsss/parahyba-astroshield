@@ -291,7 +291,7 @@ export default function App() {
               disabled={loading}
             >
               <Download className="w-4 h-4 mr-2" />
-              {loading ? "Carregando..." : "Carregar Dados Reais NASA"}
+              {loading ? "Carregando..." : "Load Real NASA Datas "}
             </Button>
           </div>
         </div>
