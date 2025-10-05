@@ -8,7 +8,7 @@ import { NASAAsteroid } from "../types/nasa";
 import { Button } from "./ui/button";
 import { ChevronsLeftRightIcon } from "lucide-react";
 import { AsteroidParams } from "../types/AsteroidTypes";
-import { ImpactApiResult } from "../utils/Api";
+import { ImpactApiResult } from "@/utils/api";
 
 interface RightPanelProps {
   asteroids: NASAAsteroid[];
