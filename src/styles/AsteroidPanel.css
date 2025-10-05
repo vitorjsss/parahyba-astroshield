@@ -322,7 +322,6 @@
 .ac-simulate-btn.disabled {
   border-color: #ccc;
   color: #ccc;
-  cursor: not-allowed;
 }
 
 /* Botões de grupo */
@@ -339,5 +338,4 @@
   border-radius: 6px;
   background: none;
   color: #000;
-  cursor: not-allowed;
 }

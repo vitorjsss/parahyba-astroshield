@@ -22,7 +22,7 @@ interface RightPanelProps {
     api?: ImpactApiResult;
   };
   onClearSelection?: () => void;
-  viewMode: '2d' | '3d' | 'animation';
+  viewMode: "2d" | "3d" | "animation";
   onSimulateImpact?: (asteroid: NASAAsteroid) => void;
 }
 
@@ -50,7 +50,9 @@ export function RightPanel({
     const closeApproach = asteroid.close_approach_data[0];
     const asteroidParams: AsteroidParams = {
       diameter: asteroid.estimated_diameter.meters.estimated_diameter_min,
-      velocity: parseFloat(closeApproach.relative_velocity.kilometers_per_second),
+      velocity: parseFloat(
+        closeApproach.relative_velocity.kilometers_per_second
+      ),
       density: 3000, // Densidade padrão para asteroides rochosos
     };
 
