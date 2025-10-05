@@ -3,6 +3,7 @@ import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { NASAAsteroid } from '../types/nasa';
 import { ExternalLink, AlertTriangle, TrendingUp, Zap, Globe2, Calendar, Focus } from 'lucide-react';
+import { InfoTooltip } from './InfoTooltip';
 
 interface AsteroidDetailsProps {
   asteroid: NASAAsteroid;
@@ -35,7 +36,12 @@ export function AsteroidDetails({ asteroid, onSimulateImpact, onFocusInView }: A
             {asteroid.is_potentially_hazardous_asteroid && (
               <Badge variant="destructive">
                 <AlertTriangle className="w-3 h-3 mr-1" />
-                Hazardous
+                Potentially Hazardous
+                <InfoTooltip
+                  content="Large asteroids passing within 7.5 million km of Earth."
+                  size="lg"
+                  position="right"
+                />
               </Badge>
             )}
           </div>
@@ -56,9 +62,16 @@ export function AsteroidDetails({ asteroid, onSimulateImpact, onFocusInView }: A
               <TrendingUp className="w-4 h-4 text-chart-1" />
               <h3>Physical Properties</h3>
             </div>
-            <div className="space-y-1">
+            <div className="flex flex-row items-center gap-4 flex-wrap">
               <p className="opacity-80">
-                <span className="opacity-60">Diameter:</span> {diameter.toFixed(0)} - {diameterMax.toFixed(0)} meters
+                <span className="opacity-60">
+                  Diameter:
+                  <InfoTooltip
+                    content="Asteroid's diameter in meters — larger means more impact energy."
+                    size="lg"
+                    position="right"
+                  />
+                </span> {diameter.toFixed(0)} - {diameterMax.toFixed(0)} meters
               </p>
               <p className="opacity-80">
                 <span className="opacity-60">Absolute Magnitude:</span> {asteroid.absolute_magnitude_h.toFixed(2)}
@@ -73,13 +86,34 @@ export function AsteroidDetails({ asteroid, onSimulateImpact, onFocusInView }: A
             </div>
             <div className="space-y-1">
               <p className="opacity-80">
-                <span className="opacity-60">Date:</span> {closeApproach.close_approach_date_full}
+                <span className="opacity-60">
+                  Date:
+                  <InfoTooltip
+                    content="Date of the asteroid's closest approach to Earth."
+                    size="lg"
+                    position="right"
+                  />
+                </span> {closeApproach.close_approach_date_full}
               </p>
               <p className="opacity-80">
-                <span className="opacity-60">Velocity:</span> {velocity.toFixed(2)} km/s
+                <span className="opacity-60">
+                  Velocity:
+                  <InfoTooltip
+                    content="Asteroid's speed as it approaches Earth (km/s)."
+                    size="lg"
+                    position="right"
+                  />
+                </span> {velocity.toFixed(2)} km/s
               </p>
               <p className="opacity-80">
-                <span className="opacity-60">Miss Distance:</span> {(missDistanceKm).toLocaleString()} km
+                <span className="opacity-60">
+                  Miss Distance:
+                  <InfoTooltip
+                    content="Predicted minimum distance between the asteroid and Earth."
+                    size="lg"
+                    position="right"
+                  />
+                </span> {(missDistanceKm).toLocaleString()} km
               </p>
               <p className="opacity-80">
                 <span className="opacity-60">Lunar Distance:</span> {parseFloat(closeApproach.miss_distance.lunar).toFixed(2)} LD
@@ -90,11 +124,23 @@ export function AsteroidDetails({ asteroid, onSimulateImpact, onFocusInView }: A
           <div className="bg-muted/50 p-4 rounded-lg space-y-2">
             <div className="flex items-center gap-2">
               <Zap className="w-4 h-4 text-chart-3" />
-              <h3>Potential Impact Energy</h3>
+              <h3>
+                Potential Impact Energy
+                <InfoTooltip
+                  content="Energy released upon collision, expressed in megatons of TNT."
+                  size="lg"
+                  position="right"
+                />
+              </h3>
             </div>
             <div className="space-y-1">
               <p className="text-chart-3">
                 {energyMegatons.toFixed(2)} megatons TNT
+                <InfoTooltip
+                  content="Converts released energy into megatons of TNT for easier understanding."
+                  size="lg"
+                  position="right"
+                />
               </p>
               <p className="opacity-60">
                 If this asteroid were to impact Earth

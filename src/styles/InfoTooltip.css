@@ -1,8 +1,35 @@
 /* InfoTooltip.css */
 .info-tooltip-container {
     position: relative;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     vertical-align: middle;
+}
+
+/* Wrapper usado pelo componente */
+.info-tooltip-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    /* Garante que o tooltip permaneça relativo durante scroll */
+    contain: layout;
+}
+
+/* Trigger usado pelo componente */
+.info-tooltip-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    box-shadow: none;
 }
 
 .info-icon {
@@ -32,16 +59,19 @@
 }
 
 .info-icon:hover,
-.info-icon-custom:hover {
-    background: linear-gradient(135deg, #2563eb, #1e40af);
-    transform: scale(1.1);
-    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25);
+.info-icon-custom:hover,
+.info-tooltip-trigger:hover {
+    background: rgba(59, 130, 246, 0.2);
+    color: #2563eb;
+    transform: scale(1.05);
+    border-color: rgba(59, 130, 246, 0.5);
 }
 
 .info-icon:focus,
-.info-icon-custom:focus {
+.info-icon-custom:focus,
+.info-tooltip-trigger:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
 }
 
 /* Tooltip content */
@@ -59,45 +89,39 @@
     line-height: 1.4;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    animation: tooltipFadeIn 0.2s ease-out;
     word-wrap: break-word;
-}
-
-@keyframes tooltipFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(4px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    /* Mantém o tooltip fixo em relação ao container pai durante scroll */
+    pointer-events: none;
 }
 
 /* Posicionamento */
-.info-tooltip-content.top {
+.info-tooltip-content.top,
+.info-tooltip-content.tooltip-top {
     bottom: calc(100% + 8px);
     left: 50%;
     transform: translateX(-50%);
 }
 
-.info-tooltip-content.bottom {
+.info-tooltip-content.bottom,
+.info-tooltip-content.tooltip-bottom {
     top: calc(100% + 8px);
     left: 50%;
     transform: translateX(-50%);
 }
 
-.info-tooltip-content.left {
+.info-tooltip-content.left,
+.info-tooltip-content.tooltip-left {
     right: calc(100% + 8px);
     top: 50%;
     transform: translateY(-50%);
 }
 
-.info-tooltip-content.right {
+.info-tooltip-content.right,
+.info-tooltip-content.tooltip-right {
     left: calc(100% + 8px);
     top: 50%;
     transform: translateY(-50%);
+    transform-origin: left center;
 }
 
 /* Setas do tooltip */
@@ -107,7 +131,8 @@
     height: 0;
 }
 
-.info-tooltip-content.top .tooltip-arrow {
+.info-tooltip-content.top .tooltip-arrow,
+.info-tooltip-content.tooltip-top .tooltip-arrow {
     top: 100%;
     left: 50%;
     transform: translateX(-50%);
@@ -116,7 +141,8 @@
     border-top: 6px solid rgba(15, 23, 42, 0.95);
 }
 
-.info-tooltip-content.bottom .tooltip-arrow {
+.info-tooltip-content.bottom .tooltip-arrow,
+.info-tooltip-content.tooltip-bottom .tooltip-arrow {
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
@@ -125,7 +151,8 @@
     border-bottom: 6px solid rgba(15, 23, 42, 0.95);
 }
 
-.info-tooltip-content.left .tooltip-arrow {
+.info-tooltip-content.left .tooltip-arrow,
+.info-tooltip-content.tooltip-left .tooltip-arrow {
     left: 100%;
     top: 50%;
     transform: translateY(-50%);
@@ -134,13 +161,15 @@
     border-left: 6px solid rgba(15, 23, 42, 0.95);
 }
 
-.info-tooltip-content.right .tooltip-arrow {
+.info-tooltip-content.right .tooltip-arrow,
+.info-tooltip-content.tooltip-right .tooltip-arrow {
     right: 100%;
     top: 50%;
     transform: translateY(-50%);
     border-top: 6px solid transparent;
     border-bottom: 6px solid transparent;
     border-right: 6px solid rgba(15, 23, 42, 0.95);
+    left: auto;
 }
 
 /* Estilos para conteúdo do tooltip */
