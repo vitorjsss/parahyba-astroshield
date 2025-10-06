@@ -345,8 +345,8 @@ function Asteroid({
     // Posição simples na linha horizontal com animação para Step4
     const position: [number, number, number] = useMemo(() => {
         if (isStep4) {
-            // Posição inicial para Step4 - será atualizada no useFrame
-            return [20, 0, 0];
+            // Posição inicial para Step4 - extremamente longe
+            return [100, 0, 0]; // Começar muito mais longe
         } else {
             // Posição padrão para outros steps
             return [
@@ -373,19 +373,36 @@ function Asteroid({
         setUseSprite(shouldUseSprite);
 
         if (asteroidRef.current) {
-            // Step4 animation - move asteroid towards Earth
+            // Step4 animation - move asteroid towards Earth MUITO mais rápido
             if (isStep4) {
                 const elapsed = _state.clock.getElapsedTime();
-                const duration = 8; // 8 segundos - animação mais rápida
-                const progress = Math.min(elapsed / duration, 1);
 
-                const startDistance = 20;
-                const endDistance = 2.5;
-                const currentDistance = startDistance - (startDistance - endDistance) * progress;
+                // Começar animação após 0.5s
+                const animationStart = 0.5;
+                const duration = 5; // 5 segundos - animação extremamente rápida
+                const progress = Math.max(0, Math.min((elapsed - animationStart) / duration, 1));
+
+                // Distâncias extremas para impacto visual dramático
+                const startDistance = 100; // Começar extremamente longe
+                const endDistance = 1.8; // Chegar muito perto da Terra
+
+                // Aceleração extremamente rápida (simula velocidade real de asteroide)
+                const acceleratedProgress = progress < 0.2 ? progress * 0.05 : 0.01 + (progress - 0.2) * 1.24;
+                const finalProgress = Math.min(acceleratedProgress, 1);
+
+                const currentDistance = startDistance - (startDistance - endDistance) * finalProgress;
 
                 asteroidRef.current.position.x = currentDistance;
-                asteroidRef.current.position.y = 0;
-                asteroidRef.current.position.z = 0;
+                asteroidRef.current.position.y = Math.sin(finalProgress * 0.1) * 0.2; // Leve variação vertical
+                asteroidRef.current.position.z = Math.cos(finalProgress * 0.1) * 0.3; // Leve variação em Z
+
+                // Rotação muito rápida para dramatismo
+                asteroidRef.current.rotation.x += 0.15;
+                asteroidRef.current.rotation.y += 0.1;
+
+                // Escala dramática baseada na distância
+                const scale = 0.05 + (1 - finalProgress) * 0.95;
+                asteroidRef.current.scale.setScalar(scale);
             } else {
                 // Normal floating animation for other steps
                 asteroidRef.current.position.x = position[0];
@@ -398,19 +415,28 @@ function Asteroid({
         }
 
         if (spriteRef.current) {
-            // Step4 animation for sprite as well
+            // Step4 animation for sprite - MUITO mais rápido
             if (isStep4) {
                 const elapsed = _state.clock.getElapsedTime();
-                const duration = 8; // 8 segundos - animação mais rápida
-                const progress = Math.min(elapsed / duration, 1);
 
-                const startDistance = 20;
-                const endDistance = 2.5;
-                const currentDistance = startDistance - (startDistance - endDistance) * progress;
+                // Começar animação após 0.5s
+                const animationStart = 0.5;
+                const duration = 5; // 5 segundos - animação extremamente rápida
+                const progress = Math.max(0, Math.min((elapsed - animationStart) / duration, 1));
+
+                // Distâncias extremas para impacto visual dramático
+                const startDistance = 100; // Começar extremamente longe
+                const endDistance = 1.8; // Chegar muito perto da Terra
+
+                // Aceleração extremamente rápida
+                const acceleratedProgress = progress < 0.2 ? progress * 0.05 : 0.01 + (progress - 0.2) * 1.24;
+                const finalProgress = Math.min(acceleratedProgress, 1);
+
+                const currentDistance = startDistance - (startDistance - endDistance) * finalProgress;
 
                 spriteRef.current.position.x = currentDistance;
-                spriteRef.current.position.y = 0;
-                spriteRef.current.position.z = 0;
+                spriteRef.current.position.y = Math.sin(finalProgress * 0.1) * 0.2;
+                spriteRef.current.position.z = Math.cos(finalProgress * 0.1) * 0.3;
             } else {
                 spriteRef.current.position.x = position[0];
                 spriteRef.current.position.y = position[1] + Math.sin(_state.clock.elapsedTime + index) * 0.05;

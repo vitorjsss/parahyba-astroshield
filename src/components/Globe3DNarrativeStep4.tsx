@@ -25,19 +25,37 @@ function AnimatedCameraController({ isStep4Active }: { isStep4Active: boolean })
         }
 
         const elapsed = clock.elapsedTime - startTime.current;
-        const duration = 15; // 15 segundos para aproximação
+        const duration = 5.5; // 5.5 segundos para animação mais rápida e dramática
 
         if (elapsed < duration) {
-            // Animação da câmera seguindo o asteroide se aproximando
+            // Animação da câmera acompanhando o asteroide se aproximando da Terra
             const progress = elapsed / duration;
 
-            // Câmera começa distante e vai se aproximando da Terra
-            const startX = 15; // Começar ainda mais longe
-            const endX = 2.5; // Chegar mais perto da Terra
-            const x = startX + (endX - startX) * progress;
+            // Aceleração igual à do asteroide
+            const acceleratedProgress = progress < 0.3 ? progress * 0.1 : 0.03 + (progress - 0.3) * 1.39;
+            const finalProgress = Math.min(acceleratedProgress, 1);
 
-            camera.position.set(x, 2, 4);
-            camera.lookAt(0, 0, 0); // Sempre olhando para a Terra
+            // Câmera acompanha o asteroide de uma posição lateral fixa
+            // Posição inicial do asteroide
+            const asteroidStartX = 80;
+            const asteroidStartY = 10;
+            const asteroidStartZ = 15;
+
+            // Posição atual do asteroide
+            const asteroidDistance = 80 - (80 - 2.2) * finalProgress;
+            const asteroidX = asteroidStartX * (asteroidDistance / 80);
+            const asteroidY = asteroidStartY * (asteroidDistance / 80);
+            const asteroidZ = asteroidStartZ * (asteroidDistance / 80);
+
+            // Câmera posicionada para observar a trajetória
+            camera.position.set(
+                asteroidX + 20, // Lateral ao asteroide
+                asteroidY + 15, // Acima do asteroide
+                asteroidZ + 25  // Atrás do asteroide
+            );
+
+            // Câmera sempre olhando para o asteroide
+            camera.lookAt(asteroidX, asteroidY, asteroidZ);
         }
     });
 
@@ -129,53 +147,55 @@ function ApproachingAsteroid({
         }
 
         const elapsed = clock.elapsedTime - startTime.current;
-        const duration = 15; // 15 segundos
+        const duration = 5.5; // 5.5 segundos - mesma duração da câmera (mais rápido)
 
         if (elapsed < duration) {
             const progress = elapsed / duration;
 
-            // Asteroide começa muito longe e se aproxima da Terra
-            const startDistance = 20; // Começar ainda mais longe
+            // Asteroide começa extremamente longe e se aproxima DIRETAMENTE da Terra
+            const startDistance = 80; // Começar extremamente longe para impacto visual
             const endDistance = 2.2; // Para bem próximo da Terra
-            const distance = startDistance + (endDistance - startDistance) * progress;
 
-            // Trajetória em direção à Terra
-            const x = distance * Math.cos(progress * 0.3);
-            const y = distance * Math.sin(progress * 0.15) * 0.4;
-            const z = distance * Math.sin(progress * 0.3) * 0.6;
+            // Trajetória com aceleração extremamente rápida (velocidade real de asteroide)
+            const acceleratedProgress = progress < 0.3 ? progress * 0.1 : 0.03 + (progress - 0.3) * 1.39;
+            const finalProgress = Math.min(acceleratedProgress, 1);
+
+            // Posição atual da distância (diminuindo conforme se aproxima)
+            const currentDistance = startDistance - (startDistance - endDistance) * finalProgress;
+
+            // Trajetória DIRETA em direção à Terra (0, 0, 0)
+            // Asteroide vem de uma posição inicial e vai direto para a Terra
+            const startX = 80; // Posição inicial X
+            const startY = 10; // Posição inicial Y (levemente acima)
+            const startZ = 15; // Posição inicial Z (levemente lateral)
+
+            // Interpolação linear direta para a Terra
+            const x = startX * (currentDistance / startDistance);
+            const y = startY * (currentDistance / startDistance);
+            const z = startZ * (currentDistance / startDistance);
 
             asteroidRef.current.position.set(x, y, z);
 
-            // Rotação do asteroide
-            asteroidRef.current.rotation.x += 0.02;
-            asteroidRef.current.rotation.y += 0.01;
+            // Rotação do asteroide muito rápida para impacto visual dramático
+            asteroidRef.current.rotation.x += 0.08;
+            asteroidRef.current.rotation.y += 0.05;
 
-            // Aumento do tamanho conforme se aproxima (efeito perspectiva)
-            const scale = 0.3 + (1 - progress) * 0.7;
+            // Aumento do tamanho conforme se aproxima (efeito perspectiva muito dramático)
+            const scale = 0.1 + (1 - finalProgress) * 0.9;
             asteroidRef.current.scale.setScalar(scale);
         }
     });
 
     return (
         <>
-            {/* Asteroide principal */}
+            {/* Asteroide principal com textura natural */}
             <mesh ref={asteroidRef}>
                 <sphereGeometry args={[size, 32, 32]} />
                 <meshStandardMaterial
                     map={asteroidTexture}
-                    roughness={0.9}
+                    roughness={0.8}
                     metalness={0.1}
-                />
-            </mesh>
-
-            {/* Brilho sutil ao redor */}
-            <mesh position={asteroidRef.current?.position}>
-                <sphereGeometry args={[size * 1.1, 16, 16]} />
-                <meshBasicMaterial
-                    color="#ffaa44"
-                    transparent
-                    opacity={0.2}
-                    side={THREE.BackSide}
+                    color="#ffffff" // Cor neutra para manter textura natural
                 />
             </mesh>
         </>

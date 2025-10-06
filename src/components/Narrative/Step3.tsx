@@ -28,13 +28,13 @@ export const Step3: React.FC<Step3Props> = ({ setCurrStep }) => {
     const hiroshimaComparison = Math.round(energyMegatons / 0.015); // Hiroshima ~15 kilotons
 
     const asteroidData = {
-        name: asteroid.name.replace("(Fictional)", "").trim(),
+        name: asteroid.name,
         mass: `${(massTons / 1e9).toFixed(1)} billion tons`,
         diameter: `${diameterKm.toFixed(1)} km`,
         diameterMeters: `${diameterMeters.toLocaleString()} meters`,
         velocity: velocityKmH,
         velocityKmPerSec: `${velocityKmS} km/s`,
-        impactZone: "San Francisco Bay Area",
+        impactZone: "Pacific Ocean (Near California)",
         missDistance: `${parseInt(approach.miss_distance.kilometers).toLocaleString()} km`,
         closeApproachDate: approach.close_approach_date,
         energyMT: `${energyMegatons.toExponential(2)} MT TNT`,
@@ -42,12 +42,12 @@ export const Step3: React.FC<Step3Props> = ({ setCurrStep }) => {
         absoluteMagnitude: asteroid.absolute_magnitude_h
     };
 
-    // Countdown simples (fictício para demonstração)
+    // Countdown baseado na data real de aproximação do asteroide
     const [timeToImpact, setTimeToImpact] = React.useState({
-        days: 81,
-        hours: 14,
-        minutes: 30,
-        seconds: 15
+        days: 0, // Asteroide já passou próximo em 6 de outubro
+        hours: 0,
+        minutes: 0,
+        seconds: 0
     });
 
     React.useEffect(() => {
@@ -252,22 +252,14 @@ export const Step3: React.FC<Step3Props> = ({ setCurrStep }) => {
                     color: '#dc2626',
                     marginBottom: '10px'
                 }}>
-                    ! CATASTROPHIC IMPACT SCENARIO
+                    ! HYPOTHETICAL IMPACT SCENARIO
                 </div>
                 <div style={{
                     fontSize: '1.1rem',
                     lineHeight: '1.5',
                     color: '#fca5a5'
                 }}>
-                    "If nothing is done, millions of lives — gone in seconds."
-                </div>
-                <div style={{
-                    fontSize: '0.9rem',
-                    marginTop: '10px',
-                    color: '#ffffff',
-                    opacity: 0.8
-                }}>
-                    Impact energy: {asteroidData.comparisonHiroshima}
+                    "This asteroid passed safely by Earth on October 6, 2025. But what if it hadn't missed?"
                 </div>
             </div>
 

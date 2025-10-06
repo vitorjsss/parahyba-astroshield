@@ -1,4 +1,5 @@
 import React from 'react';
+import { DANGEROUS_ASTEROID } from '../DangerousAsteroid';
 
 interface Step2Props {
     setCurrStep?: (step: number) => void;
@@ -18,29 +19,29 @@ export const Step2: React.FC<Step2Props> = ({ setCurrStep }) => {
                     @keyframes buttonPulse {
                         0% {
                             transform: scale(1);
-                            box-shadow: 0 0 0 0 rgba(255, 165, 0, 0.7);
+                            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
                         }
                         70% {
                             transform: scale(1.05);
-                            box-shadow: 0 0 0 10px rgba(255, 165, 0, 0);
+                            box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
                         }
                         100% {
                             transform: scale(1);
-                            box-shadow: 0 0 0 0 rgba(255, 165, 0, 0);
+                            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
                         }
                     }
                     
                     .step2-button {
-                        background: linear-gradient(45deg, #ff6b35, #f7931e);
+                        background: linear-gradient(45deg, #3b82f6, #1d4ed8);
                         border: none;
                         color: white;
                         padding: 12px 30px;
                         font-size: 1.1rem;
-                        font-weight: bold;
-                        border-radius: 25px;
+                        font-weight: 600;
+                        border-radius: 12px;
                         cursor: pointer;
                         transition: all 0.3s ease;
-                        font-family: 'Ubuntu Mono', monospace;
+                        font-family: 'system-ui', sans-serif;
                         text-transform: uppercase;
                         letter-spacing: 1px;
                         margin-top: 1.5rem;
@@ -50,7 +51,7 @@ export const Step2: React.FC<Step2Props> = ({ setCurrStep }) => {
                     
                     .step2-button:hover {
                         transform: translateY(-3px);
-                        box-shadow: 0 10px 25px rgba(255, 107, 53, 0.4);
+                        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
                         animation: buttonPulse 2s infinite;
                     }
                     
@@ -76,39 +77,96 @@ export const Step2: React.FC<Step2Props> = ({ setCurrStep }) => {
             }} />
             <div style={{
                 position: 'fixed',
-                top: '80%',
+                top: '50%',
                 left: '50%',
-                background: 'rgba(1, 6, 19, 0.01)',
+                background: 'rgba(15, 23, 42, 0.95)',
                 transform: 'translate(-50%, -50%)',
-                borderRadius: '50px',
-                padding: '2rem 3rem',
+                borderRadius: '20px',
+                padding: '2.5rem 3rem',
                 zIndex: 9999,
                 color: 'white',
-                fontFamily: "monospace",
+                fontFamily: "system-ui, -apple-system, sans-serif",
                 alignItems: 'center',
                 textAlign: 'center',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.02)',
+                backdropFilter: 'blur(15px)',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)',
+                maxWidth: '500px',
+                width: '90%'
             }}>
-                {/* Ícone de meteoro */}
+                {/* Dados do asteroide real */}
                 <div style={{
-                    fontSize: '5rem',
-                    marginBottom: '1.2rem',
-                    filter: 'drop-shadow(0 0 10px rgba(255, 166, 0, 1))'
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: '12px',
+                    padding: '1.5rem',
+                    marginBottom: '1.5rem'
                 }}>
-                    ☄️
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        marginBottom: '12px'
+                    }}>
+                        <span style={{ fontSize: '2rem' }}>⚠️</span>
+                        <h2 style={{
+                            color: '#ef4444',
+                            fontSize: '1.5rem',
+                            fontWeight: 'bold',
+                            margin: 0
+                        }}>
+                            ASTEROID DETECTED
+                        </h2>
+                    </div>
+
+                    <div style={{
+                        fontSize: '1.1rem',
+                        fontWeight: 'bold',
+                        color: '#fbbf24',
+                        marginBottom: '8px'
+                    }}>
+                        {DANGEROUS_ASTEROID.name}
+                    </div>
+
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '12px',
+                        fontSize: '0.9rem',
+                        color: '#d1d5db'
+                    }}>
+                        <div>
+                            <strong>Diameter:</strong><br />
+                            {Math.round(DANGEROUS_ASTEROID.estimated_diameter.meters.estimated_diameter_min)} - {Math.round(DANGEROUS_ASTEROID.estimated_diameter.meters.estimated_diameter_max)}m
+                        </div>
+                        <div>
+                            <strong>Velocity:</strong><br />
+                            {parseFloat(DANGEROUS_ASTEROID.close_approach_data[0].relative_velocity.kilometers_per_second).toFixed(1)} km/s
+                        </div>
+                        <div>
+                            <strong>Approach Date:</strong><br />
+                            {DANGEROUS_ASTEROID.close_approach_data[0].close_approach_date}
+                        </div>
+                        <div>
+                            <strong>Miss Distance:</strong><br />
+                            {parseFloat(DANGEROUS_ASTEROID.close_approach_data[0].miss_distance.lunar).toFixed(1)} lunar distances
+                        </div>
+                    </div>
                 </div>
 
                 {/* Texto principal */}
                 <div style={{
-                    fontSize: '1.5rem',
-                    lineHeight: '1.5',
+                    fontSize: '1.3rem',
+                    lineHeight: '1.4',
                     textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-                    maxWidth: '400px',
                     color: '#ffffff',
-                    marginBottom: '1rem'
+                    marginBottom: '1.5rem',
+                    fontWeight: '500'
                 }}>
-                    Learn with us how YOU can save the planet
+                    This is a <span style={{ color: '#ef4444', fontWeight: 'bold' }}>real asteroid</span> approaching Earth.
+                    <br />
+                    Learn how we can protect our planet.
                 </div>
 
                 {/* Botão Continue */}
@@ -116,7 +174,7 @@ export const Step2: React.FC<Step2Props> = ({ setCurrStep }) => {
                     className="step2-button"
                     onClick={handleContinue}
                 >
-                    🚀 Continue
+                    Continue
                 </button>
             </div>
         </>

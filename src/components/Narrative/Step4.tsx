@@ -7,41 +7,73 @@ interface Step4Props {
 
 export const Step4: React.FC<Step4Props> = ({ setCurrStep, onWhiteScreen }) => {
     const [animationPhase, setAnimationPhase] = React.useState<'starting' | 'approaching' | 'white' | 'finished'>('starting');
+    const hasStarted = React.useRef(false);
 
     React.useEffect(() => {
-        // Iniciar animação após 2 segundos (tempo para camera se posicionar)
-        const startTimer = setTimeout(() => {
-            setAnimationPhase('approaching');
-        }, 2000);
+        // Prevenir múltiplas execuções
+        if (hasStarted.current) return;
+        hasStarted.current = true;
 
-        // Fase 1: Asteroide se aproximando (8 segundos após o início)
+        console.log('🎬 Iniciando Step4 animation sequence');
+
+        // Iniciar animação após 0.5 segundo (posicionamento rápido)
+        const startTimer = setTimeout(() => {
+            console.log('🚀 Step4: Starting approach');
+            setAnimationPhase('approaching');
+        }, 500);
+
+        // Fase 1: Asteroide se aproximando (5 segundos - animação mais rápida e dramática)
         const approachTimer = setTimeout(() => {
+            console.log('💥 Step4: Impact - showing white screen');
             setAnimationPhase('white');
             // Avisar o App.tsx para mostrar tela branca
             if (onWhiteScreen) {
                 onWhiteScreen(true);
             }
-        }, 6000); // 2 + 8 segundos
+        }, 5500); // 0.5 + 5 segundos de aproximação
 
-        // Fase 2: Tela branca (3 segundos após os 7 iniciais para dar tempo da animação)
+        // Fase 2: Tela branca (2 segundos após impacto - mais longa)
         const whiteScreenTimer = setTimeout(() => {
+            console.log('✨ Step4: Hiding white screen');
             setAnimationPhase('finished');
             // Avisar o App.tsx para esconder tela branca
             if (onWhiteScreen) {
                 onWhiteScreen(false);
             }
-            // Avançar para próximo step
+        }, 7500); // 5.5 + 2 segundos de tela branca
+
+        // Fase 3: Avançar para próximo step (2 segundos após tela branca)
+        const nextStepTimer = setTimeout(() => {
+            console.log('🎯 Step4: Advancing to Step5');
             if (setCurrStep) {
                 setCurrStep(5);
             }
-        }, 9000); // 7 + 3 segundos
+        }, 9500); // 7.5 + 2 segundos para transição natural
 
         return () => {
+            console.log('🧹 Step4: Cleaning up timers');
             clearTimeout(startTimer);
             clearTimeout(approachTimer);
             clearTimeout(whiteScreenTimer);
+            clearTimeout(nextStepTimer);
+
+            // Reset do estado da tela branca quando o componente for desmontado
+            if (onWhiteScreen) {
+                onWhiteScreen(false);
+            }
         };
-    }, [setCurrStep, onWhiteScreen]);
+    }, []); // Dependências vazias para executar apenas uma vez
+
+    // Cleanup adicional quando o componente for desmontado
+    React.useEffect(() => {
+        return () => {
+            console.log('🔄 Step4: Component unmounting');
+            hasStarted.current = false;
+            if (onWhiteScreen) {
+                onWhiteScreen(false);
+            }
+        };
+    }, [onWhiteScreen]);
 
     return null;
 };

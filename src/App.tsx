@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { WorldMap } from "./components/WorldMap";
 import { Globe3D } from "./components/Globe3D";
 import { Globe3DNarrative } from "./components/Globe3DNarrative";
+import { Globe3DNarrativeStep4 } from "./components/Globe3DNarrativeStep4";
 import { ImpactAnimationScreen } from "./components/ImpactAnimationScreen";
 import { Step1, Step2, Step3, Step4, Step5, Step6 } from "./components/Narrative";
 import { DANGEROUS_ASTEROID } from "./components/DangerousAsteroid";
@@ -54,21 +55,21 @@ export default function App() {
   };
 
   // Função para controlar tela branca do Step4
-  const handleWhiteScreen = (show: boolean) => {
+  const handleWhiteScreen = useCallback((show: boolean) => {
     setShowWhiteScreen(show);
 
     if (show) {
-      // Iniciar animação gradual da tela branca
+      // Iniciar animação do fade-in branco mais longa
       let progress = 0;
-      const duration = 1000; // 1 segundo para a animação
+      const duration = 800; // 800ms para animação mais longa e dramática
       const startTime = Date.now();
 
       const animate = () => {
         const elapsed = Date.now() - startTime;
         progress = Math.min(elapsed / duration, 1);
 
-        // Usar uma função de easing mais rápida no final
-        const eased = progress < 0.7 ? progress * 0.3 : 0.21 + (progress - 0.7) * 2.63;
+        // Usar uma função de easing mais suave para impacto prolongado
+        const eased = progress < 0.4 ? progress * 0.15 : 0.06 + (progress - 0.4) * 1.57;
         setWhiteScreenAnimation(Math.min(eased, 1));
 
         if (progress < 1) {
@@ -81,7 +82,7 @@ export default function App() {
       // Reset imediato quando esconder
       setWhiteScreenAnimation(0);
     }
-  };
+  }, []);
   const [viewMode, setViewMode] = useState<ViewMode>("3d");
   const [impactPoint, setImpactPoint] = useState<[number, number] | null>(null);
   const [simulationResults, setSimulationResults] = useState<{
@@ -420,19 +421,26 @@ export default function App() {
             }
           }} />}
 
-          {/* Globe3DNarrative para todos os steps */}
-          {currStep < 5 &&
-            <Globe3DNarrative
-              asteroids={[DANGEROUS_ASTEROID]}
-              onAsteroidClick={handleAsteroidSelect}
-              selectedAsteroid={DANGEROUS_ASTEROID}
-              autoRotate={currStep !== 4} // Não auto-rotar no Step4
-              controlsRef={controlsRef}
-              focusedAsteroid={DANGEROUS_ASTEROID}
-              onSimulateImpact={handleSimulateAsteroidImpactFor}
-              isStep4={currStep === 4}
-            />
-          }
+          {/* Globe3D components para narrativa */}
+          {currStep < 5 && (
+            currStep === 4 ? (
+              <Globe3DNarrativeStep4
+                asteroids={[DANGEROUS_ASTEROID]}
+                isStep4Active={true}
+              />
+            ) : (
+              <Globe3DNarrative
+                asteroids={[DANGEROUS_ASTEROID]}
+                onAsteroidClick={handleAsteroidSelect}
+                selectedAsteroid={DANGEROUS_ASTEROID}
+                autoRotate={true}
+                controlsRef={controlsRef}
+                focusedAsteroid={DANGEROUS_ASTEROID}
+                onSimulateImpact={handleSimulateAsteroidImpactFor}
+                isStep4={false}
+              />
+            )
+          )}
         </>
       )}
 
