@@ -44,7 +44,7 @@ export default function App() {
   const handleModeSelection = (mode: 'narrative' | 'free') => {
     setShowWelcomeScreen(false);
     setNarrative(mode === 'narrative');
-    setCurrStep(5);
+    setCurrStep(1);
   };
 
   // Função para finalizar narrativa (chamada pelo Step6)
