@@ -143,9 +143,6 @@ export function AsteroidControls({
               },
             ].map((item, idx) => (
               <div className="ac-slider-group" key={idx}>
-                <label>
-                  {item.label}: {item.value}
-                </label>
                 <label
                   style={{
                     display: "flex",

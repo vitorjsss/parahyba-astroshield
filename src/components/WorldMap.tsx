@@ -4,7 +4,7 @@ import { feature } from "topojson-client";
 import { UsersIcon, ZoomInIcon, ZoomOutIcon, HandIcon, XIcon } from "lucide-react";
 import { NASAAsteroid } from "../types/nasa";
 import { MultiImpactLegend } from "./MultiImpactLegend";
-import { ImpactApiResult } from "../utils/Api";
+import { ImpactApiResult } from "../utils/api";
 
 interface WorldMapProps {
   onMapClick?: (coordinates: [number, number]) => void;
