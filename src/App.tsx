@@ -28,7 +28,7 @@ import {
   simulateCustomImpact,
   simulateAsteroidImpact,
   ImpactApiResult,
-} from "./utils/Api";
+} from "./utils/api";
 import { calculateBestImpactPoint } from "./utils/asteroidTrajectory";
 
 type ViewMode = "2d" | "3d" | "animation";
