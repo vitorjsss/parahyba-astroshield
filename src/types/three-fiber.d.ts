@@ -6,11 +6,13 @@ import * as THREE from 'three'
 declare global {
   namespace JSX {
     interface IntrinsicElements {
+      group: Object3DNode<THREE.Group, typeof THREE.Group>
       mesh: Object3DNode<THREE.Mesh, typeof THREE.Mesh>
       sphereGeometry: Object3DNode<THREE.SphereGeometry, typeof THREE.SphereGeometry>
       meshStandardMaterial: Object3DNode<THREE.MeshStandardMaterial, typeof THREE.MeshStandardMaterial>
       meshBasicMaterial: Object3DNode<THREE.MeshBasicMaterial, typeof THREE.MeshBasicMaterial>
       meshPhongMaterial: Object3DNode<THREE.MeshPhongMaterial, typeof THREE.MeshPhongMaterial>
+      meshLambertMaterial: Object3DNode<THREE.MeshLambertMaterial, typeof THREE.MeshLambertMaterial>
       sprite: Object3DNode<THREE.Sprite, typeof THREE.Sprite>
       spriteMaterial: Object3DNode<THREE.SpriteMaterial, typeof THREE.SpriteMaterial>
       ringGeometry: Object3DNode<THREE.RingGeometry, typeof THREE.RingGeometry>

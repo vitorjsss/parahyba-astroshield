@@ -184,8 +184,8 @@ export function AsteroidControls({
                 {energyMegatons < 1
                   ? "Small local impact"
                   : energyMegatons < 100
-                  ? "Regional devastation"
-                  : "Global catastrophe"}
+                    ? "Regional devastation"
+                    : "Global catastrophe"}
               </p>
               <label
                 style={{
@@ -223,8 +223,8 @@ export function AsteroidControls({
                 {energyMegatons < 1
                   ? "Small local impact"
                   : energyMegatons < 100
-                  ? "Regional devastation"
-                  : "Global catastrophe"}
+                    ? "Regional devastation"
+                    : "Global catastrophe"}
               </p>
             </div>
 
@@ -295,16 +295,15 @@ export function AsteroidControls({
                 <button
                   key={strategy}
                   onClick={() => fetchMitigationData(strategy)}
-                  className={`ac-strategy-btn ${
-                    selectedStrategy === strategy ? "active" : ""
-                  }`}
+                  className={`ac-strategy-btn ${selectedStrategy === strategy ? "active" : ""
+                    }`}
                   disabled={loading}
                 >
                   {strategy === "kinetic"
                     ? "Kinetic Impactor"
                     : strategy === "gravity_tractor"
-                    ? "Gravity Tractor"
-                    : "Nuclear Deflection"}
+                      ? "Gravity Tractor"
+                      : "Nuclear Deflection"}
                 </button>
               ))}
             </div>
