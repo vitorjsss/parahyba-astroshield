@@ -7,11 +7,13 @@ import "../styles/AsteroidControls.css";
 interface AsteroidControlsProps {
   onSimulate: (params: AsteroidParams) => void;
   impactPoint: [number, number] | null;
+  isSimulating?: boolean;
 }
 
 export function AsteroidControls({
   onSimulate,
   impactPoint,
+  isSimulating = false,
 }: AsteroidControlsProps) {
   const [diameter, setDiameter] = useState([100]);
   const [velocity, setVelocity] = useState([20]);
@@ -151,11 +153,13 @@ export function AsteroidControls({
                     verticalAlign: "middle",
                   }}
                 >
-                  <InfoTooltip
-                    content={item.tooltip}
-                    size="md"
-                    position="right"
-                  />
+                  {!isSimulating && (
+                    <InfoTooltip
+                      content={item.tooltip}
+                      size="md"
+                      position="right"
+                    />
+                  )}
                   {item.label}: {item.value}
                 </label>
                 <input
@@ -192,11 +196,13 @@ export function AsteroidControls({
                   verticalAlign: "middle",
                 }}
               >
-                <InfoTooltip
-                  content="Energy released upon collision, expressed in megatons of TNT."
-                  size="md"
-                  position="right"
-                />
+                {!isSimulating && (
+                  <InfoTooltip
+                    content="Energy released upon collision, expressed in megatons of TNT."
+                    size="md"
+                    position="right"
+                  />
+                )}
                 Impact Energy
               </label>
               <p>
@@ -208,11 +214,13 @@ export function AsteroidControls({
                     verticalAlign: "middle",
                   }}
                 >
-                  <InfoTooltip
-                    content="Converts released energy into megatons of TNT for easier understanding."
-                    size="md"
-                    position="right"
-                  />
+                  {!isSimulating && (
+                    <InfoTooltip
+                      content="Converts released energy into megatons of TNT for easier understanding."
+                      size="md"
+                      position="right"
+                    />
+                  )}
                   {energyMegatons.toFixed(2)} megatons TNT
                 </label>
               </p>
@@ -234,11 +242,13 @@ export function AsteroidControls({
                   verticalAlign: "middle",
                 }}
               >
-                <InfoTooltip
-                  content="Latitude and longitude of the impact center."
-                  size="md"
-                  position="right"
-                />
+                {!isSimulating && (
+                  <InfoTooltip
+                    content="Latitude and longitude of the impact center."
+                    size="md"
+                    position="right"
+                  />
+                )}
                 Impact Location
               </label>
               {impactPoint ? (
@@ -265,11 +275,13 @@ export function AsteroidControls({
                   verticalAlign: "middle",
                 }}
               >
-                <InfoTooltip
-                  content="Techniques to deflect the asteroid and prevent impact."
-                  size="lg"
-                  position="bottom"
-                />
+                {!isSimulating && (
+                  <InfoTooltip
+                    content="Techniques to deflect the asteroid and prevent impact."
+                    size="lg"
+                    position="bottom"
+                  />
+                )}
               </label>
             </h3>
             <p>Simulate methods to alter trajectory and prevent impact.</p>
@@ -385,7 +397,7 @@ export function AsteroidControls({
         <button
           onClick={handleSimulate}
           disabled={!impactPoint}
-          className={`ac-simulate-btn ${!impactPoint ? "disabled" : ""}`}
+          className={`ac-simulate-btn simulate-btn-red ${!impactPoint ? "disabled" : ""}`}
         >
           {impactPoint ? "Calculate Impact Effects" : "Select Impact Location"}
         </button>

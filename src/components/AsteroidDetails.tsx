@@ -17,9 +17,9 @@ export function AsteroidDetails({ asteroid, onSimulateImpact, onFocusInView }: A
   const diameterMax = asteroid.estimated_diameter.meters.estimated_diameter_max;
   const missDistanceKm = parseFloat(closeApproach.miss_distance.kilometers);
   const velocity = parseFloat(closeApproach.relative_velocity.kilometers_per_second);
-  
+
   // Calculate potential impact energy (if it were to hit Earth)
-  const volume = (4/3) * Math.PI * Math.pow(diameter/2, 3);
+  const volume = (4 / 3) * Math.PI * Math.pow(diameter / 2, 3);
   const mass = volume * 3000; // Assume rocky density
   const energyJoules = 0.5 * mass * Math.pow(velocity * 1000, 2);
   const energyMegatons = energyJoules / (4.184 * Math.pow(10, 15));
@@ -168,7 +168,7 @@ export function AsteroidDetails({ asteroid, onSimulateImpact, onFocusInView }: A
               </Button>
             )}
             {onSimulateImpact && (
-              <Button onClick={onSimulateImpact} className="flex-1" variant="outline">
+              <Button onClick={onSimulateImpact} className="flex-1 simulate-btn-red" variant="outline">
                 Simulate Impact
               </Button>
             )}

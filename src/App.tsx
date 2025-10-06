@@ -40,6 +40,7 @@ export default function App() {
   const [narrative, setNarrative] = useState<boolean>(true);
   const [showWhiteScreen, setShowWhiteScreen] = useState(false);
   const [whiteScreenAnimation, setWhiteScreenAnimation] = useState(0);
+  const [isSimulating, setIsSimulating] = useState(false); // Estado de loading para simulação
 
   // Função para lidar com seleção de modo na tela inicial
   const handleModeSelection = (mode: 'narrative' | 'free') => {
@@ -194,31 +195,38 @@ export default function App() {
     setSimulationResults(null);
   };
 
-  const handleSimulate = async (params: AsteroidParams) => {
-    if (!impactPoint) return;
+  const handleSimulate = async (params: AsteroidParams, customImpactPoint?: [number, number]) => {
+    const targetImpactPoint = customImpactPoint || impactPoint;
+    if (!targetImpactPoint) return;
+
+    setIsSimulating(true); // Iniciar loading
+
     // Optimistic local result first
-    setSimulationResults({ params, impactPoint });
+    setSimulationResults({ params, impactPoint: targetImpactPoint });
+
     try {
       let api: ImpactApiResult | undefined = undefined;
       // If there is a selected asteroid with an ID, prefer the asteroid endpoint; otherwise use custom
       if (selectedAsteroid && selectedAsteroid.id) {
         api = await simulateAsteroidImpact({
           asteroidId: selectedAsteroid.id,
-          lat: impactPoint[1],
-          lon: impactPoint[0],
+          lat: targetImpactPoint[1],
+          lon: targetImpactPoint[0],
         });
       } else {
         api = await simulateCustomImpact({
           diameter_m: params.diameter,
           velocity_kms: params.velocity,
           density_kg_m3: params.density,
-          lat: impactPoint[1],
-          lon: impactPoint[0],
+          lat: targetImpactPoint[1],
+          lon: targetImpactPoint[0],
         });
       }
-      setSimulationResults({ params, impactPoint, api });
+      setSimulationResults({ params, impactPoint: targetImpactPoint, api });
     } catch (e: any) {
       console.error("❌ Erro ao simular impacto:", e);
+    } finally {
+      setIsSimulating(false); // Finalizar loading
     }
   };
 
@@ -298,8 +306,10 @@ export default function App() {
   };
 
   // Handle animation completion
-  const handleAnimationComplete = () => {
+  const handleAnimationComplete = async () => {
     if (showImpactAnimation) {
+      console.log("🚀 handleAnimationComplete iniciado", { asteroid: showImpactAnimation.name });
+
       // After animation completes, switch to 2D view with results
       const closeApproach = showImpactAnimation.close_approach_data[0];
       const diameter =
@@ -310,16 +320,9 @@ export default function App() {
 
       // ✅ Calcula posição realística baseada na trajetória do asteroide
       const realisticImpactPoint = calculateBestImpactPoint(showImpactAnimation);
-      setImpactPoint(realisticImpactPoint);
+      console.log("🎯 Impact point calculado:", realisticImpactPoint);
 
-      setSimulationResults({
-        params: {
-          diameter,
-          velocity,
-          density: 3000,
-        },
-        impactPoint: realisticImpactPoint,
-      });
+      setImpactPoint(realisticImpactPoint);
 
       // Keep the asteroid selected for the 2D view
       setSelectedAsteroid(showImpactAnimation);
@@ -329,6 +332,15 @@ export default function App() {
 
       // Switch to 2D view to show detailed results
       setViewMode("2d");
+
+      console.log("⏳ Iniciando simulação da API...");
+      // Execute a simulação real com a API
+      await handleSimulate({
+        diameter,
+        velocity,
+        density: 3000,
+      }, realisticImpactPoint);
+      console.log("✅ Simulação da API concluída");
     }
   };
   const handleResetView = () => {
@@ -433,7 +445,7 @@ export default function App() {
                 asteroids={[DANGEROUS_ASTEROID]}
                 onAsteroidClick={handleAsteroidSelect}
                 selectedAsteroid={DANGEROUS_ASTEROID}
-                autoRotate={true}
+                autoRotate={false}
                 controlsRef={controlsRef}
                 focusedAsteroid={DANGEROUS_ASTEROID}
                 onSimulateImpact={handleSimulateAsteroidImpactFor}
@@ -451,7 +463,6 @@ export default function App() {
             <div className="flex items-center gap-3">
               <Globe2 className="w-6 h-6 text-primary" />
               <h1>Asteroid Impact Simulator</h1>
-              <Badge variant="secondary">Impactor-2025</Badge>
             </div>
             <div className="flex items-center gap-4">
               <Badge variant="outline" className="gap-2">
@@ -476,15 +487,6 @@ export default function App() {
                   3D Globe
                 </Button>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadNASAData}
-                disabled={loading}
-              >
-                <Satellite className="w-4 h-4 mr-2" />
-                {loading ? "Loading..." : "NASA Real Data"}
-              </Button>
             </div>
           </div>
         </header>
@@ -627,6 +629,7 @@ export default function App() {
               impactPoint={impactPoint}
               handleSimulate={handleSimulate}
               simulationResults={simulationResults || undefined}
+              isSimulating={isSimulating}
               onClearSelection={() => {
                 setSelectedAsteroid(null);
                 setFocusedAsteroid(null);

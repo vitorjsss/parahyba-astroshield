@@ -16,7 +16,10 @@
     vertical-align: middle;
     /* Garante que o tooltip permaneça relativo durante scroll */
     contain: layout;
-    z-index: 1;
+    z-index: 10000;
+    /* Z-index alto para ficar acima do RightPanel */
+    margin-right: 1px;
+    /* Margin-right para separar do texto */
 }
 
 /* Trigger usado pelo componente */
@@ -78,7 +81,8 @@
 /* Tooltip content */
 .info-tooltip-content {
     position: absolute;
-    z-index: 9999;
+    z-index: 99999;
+    /* Z-index extremamente alto */
     min-width: 150px;
     max-width: 220px;
     background: rgba(15, 23, 42, 0.95);
@@ -218,4 +222,13 @@
         font-size: 11px;
         padding: 6px 10px;
     }
+}
+
+/* Garantir que tooltips apareçam acima de todos os painéis */
+.right-panel-container .info-tooltip-content,
+.slide-panel .info-tooltip-content,
+.tab-content .info-tooltip-content,
+.simulation-scroll .info-tooltip-content {
+    z-index: 999999 !important;
+    contain: none !important;
 }

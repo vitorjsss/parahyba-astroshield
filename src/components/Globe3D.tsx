@@ -680,37 +680,26 @@ export function Globe3D({ asteroids, onAsteroidClick, selectedAsteroid, autoRota
         >
           <button
             onClick={() => onSimulateImpact(selectedAsteroid)}
+            className="simulate-btn-red"
             style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               gap: '8px',
-              padding: '12px 24px',
-              backgroundColor: '#d0a3a218',
+              padding: '14px 28px',
+              backgroundColor: 'rgba(220, 38, 38, 0.9)',
               color: '#fff',
-              borderRadius: '10px',
+              borderRadius: '25px',
               fontSize: '14px',
               fontWeight: 600,
               cursor: 'pointer',
-              transition: 'all 0.2s ease',
+              border: '2px solid rgba(220, 38, 38, 1)',
+              transition: 'all 0.3s ease',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)',
             }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.backgroundColor = '#500c0bb8')
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.backgroundColor = '#d0a3a218')
-            }
           >
-            <img
-              src="/src/assets/asteroid.png"
-              alt="Asteroid"
-              style={{
-                width: '48px',
-                height: '48px',
-                filter: 'brightness(0) saturate(100%) invert(13%) sepia(100%) saturate(7207%) hue-rotate(358deg) brightness(98%) contrast(118%)', // Filtro para vermelho mais intenso
-                objectFit: 'contain'
-              }}
-            />
             Simulate
             <br />
             {selectedAsteroid.name}

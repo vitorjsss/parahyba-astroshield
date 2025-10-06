@@ -133,7 +133,7 @@ export const Step2: React.FC<Step2Props> = ({ setCurrStep }) => {
                             color: '#fbbf24',
                             marginBottom: '8px'
                         }}>
-                            {DANGEROUS_ASTEROID.name}
+                            Impactor-2025
                         </div>
 
                         <div style={{

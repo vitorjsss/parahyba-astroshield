@@ -117,24 +117,38 @@
 /* Botão de simular */
 .ac-simulate-btn {
   margin-top: 12px;
-  padding: 10px;
-  border: 1px solid #000;
-  border-radius: 6px;
-  background: none;
-  color: #000;
+  padding: 12px 20px;
+  border: 2px solid rgba(220, 38, 38, 1);
+  border-radius: 20px;
+  background: rgba(220, 38, 38, 0.9);
+  color: #fff;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
 }
 
 .ac-simulate-btn:hover:not(.disabled) {
-  background: #000;
+  background: rgba(185, 28, 28, 0.7);
+  border-color: rgba(185, 28, 28, 0.8);
   color: #fff;
+  transform: scale(1.05);
+  box-shadow: 0 6px 25px rgba(220, 38, 38, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .ac-simulate-btn.disabled {
-  border-color: #ccc;
-  color: #ccc;
+  border-color: #ccc !important;
+  background: rgba(245, 245, 245, 0.8) !important;
+  color: #ccc !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
 }
 
 /* Botão de deflexão (desativado) */

@@ -35,11 +35,6 @@ export function Globe3DControls({
           <div className="control-row">
             <label htmlFor="auto-rotate" className="control-label">
               {autoRotate ? '▶ Auto Rotate' : '⏸ Auto Rotate'}
-              <InfoTooltip
-                content="Automatically rotates the globe for better visualization."
-                size="lg"
-                position="right"
-              />
             </label>
             <input
               type="checkbox"
@@ -62,11 +57,6 @@ export function Globe3DControls({
             )}
             <button className="btn" onClick={onResetView}>
               Reset View
-              <InfoTooltip
-                content="Re-centers the planet and resets camera position."
-                size="lg"
-                position="right"
-              />
             </button>
           </div>
 

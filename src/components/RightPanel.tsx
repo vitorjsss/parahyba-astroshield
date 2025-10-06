@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../styles/RightPanel.css";
 
 import { AsteroidList } from "./AsteroidList";
@@ -21,6 +21,7 @@ interface RightPanelProps {
     impactPoint: [number, number];
     api?: ImpactApiResult;
   };
+  isSimulating?: boolean; // Estado de loading para simulação
   onClearSelection?: () => void;
   viewMode: "2d" | "3d" | "animation";
   onSimulateImpact?: (asteroid: NASAAsteroid) => void;
@@ -33,6 +34,7 @@ export function RightPanel({
   impactPoint,
   handleSimulate,
   simulationResults,
+  isSimulating = false,
   onClearSelection,
   viewMode,
   onSimulateImpact,
@@ -42,6 +44,14 @@ export function RightPanel({
     "tracking"
   );
   const [hovered, setHovered] = useState(false);
+
+  // Mudar automaticamente para a tab simulation quando há resultados
+  useEffect(() => {
+    if (simulationResults?.api && viewMode === "2d") {
+      setActiveTab("simulation");
+      setOpen(true); // Também abrir o painel se estiver fechado
+    }
+  }, [simulationResults?.api, viewMode]);
 
   // Função para converter asteroide em AsteroidParams e chamar onSimulate
   const handleAsteroidSimulate = (asteroid: NASAAsteroid) => {
@@ -119,17 +129,28 @@ export function RightPanel({
           )}
 
           {activeTab === "simulation" && (
-            <div className="simulation-scroll p-4 overflow-y-auto h-full">
+            <div className="simulation-scroll p-4 overflow-y-auto h-full relative">
               <AsteroidControls
                 onSimulate={handleSimulate}
                 impactPoint={impactPoint}
+                isSimulating={isSimulating}
               />
 
-              {simulationResults?.api && (
+              {!isSimulating && simulationResults?.api && activeTab === "simulation" && (
                 <ImpactResults
                   impactPoint={simulationResults.impactPoint}
                   results={simulationResults.api}
                 />
+              )}
+
+              {isSimulating && (
+                <div className="impact-loading-overlay">
+                  <div className="impact-loading-content">
+                    <div className="impact-loading-spinner"></div>
+                    <h3>Calculating Impact</h3>
+                    <p>Processing asteroid impact simulation...</p>
+                  </div>
+                </div>
               )}
             </div>
           )}

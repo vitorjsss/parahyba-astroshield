@@ -3,17 +3,11 @@
   position: fixed;
   top: 80px;
   right: 20px;
-  z-index: 10;
+  z-index: 1000;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   font-family: "Inter", sans-serif;
-  pointer-events: none; /* Disable pointer events by default */
-}
-
-/* Always allow interactions with the toggle button */
-.right-panel-container .panel-toggle-btn {
-  pointer-events: auto;
 }
 
 /* === Botão flutuante redondo no topo === */
@@ -79,7 +73,6 @@
 .slide-panel.open {
   transform: scaleY(1);
   opacity: 1;
-  pointer-events: auto; /* Enable pointer events only when open */
 }
 
 /* Tabs */
@@ -147,4 +140,59 @@
 .tracking-scroll::-webkit-scrollbar-thumb:hover,
 .simulation-scroll::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #94a3b8, #64748b);
+}
+
+/* Loading overlay para ImpactResults */
+.impact-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  border-radius: 12px;
+}
+
+.impact-loading-content {
+  text-align: center;
+  padding: 2rem;
+}
+
+.impact-loading-content h3 {
+  margin: 1rem 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.impact-loading-content p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+/* Spinner de carregamento */
+.impact-loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: impact-spin 1s linear infinite;
+  margin: 0 auto 1rem auto;
+}
+
+@keyframes impact-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }

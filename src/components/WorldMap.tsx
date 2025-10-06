@@ -418,11 +418,11 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
         const transform = d3.zoomTransform(svgNode);
         const untransformed = transform.invert(pt2);
         const coordsFallback = projection.invert?.(untransformed as [number, number]);
-  // Save click position
-  lastClickScreenRef.current = { clientX: (event as MouseEvent).clientX, clientY: (event as MouseEvent).clientY };
-  // eslint-disable-next-line no-console
-  console.log('screenToGeo(fallback) ->', { pt2, untransformed, transform: { k: transform.k, x: transform.x, y: transform.y }, coordsFallback });
-  return coordsFallback;
+        // Save click position
+        lastClickScreenRef.current = { clientX: (event as MouseEvent).clientX, clientY: (event as MouseEvent).clientY };
+        // eslint-disable-next-line no-console
+        console.log('screenToGeo(fallback) ->', { pt2, untransformed, transform: { k: transform.k, x: transform.x, y: transform.y }, coordsFallback });
+        return coordsFallback;
       } catch (err) {
         // final fallback
         const pt2 = d3.pointer(event, svgNode);
@@ -459,9 +459,9 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
           }
         }
         // fallback
-  const transform = d3.zoomTransform(svgNode);
-  // convert client to svg pointer coords
-  const svgPoint = d3.pointer({ clientX, clientY } as any, svgNode);
+        const transform = d3.zoomTransform(svgNode);
+        // convert client to svg pointer coords
+        const svgPoint = d3.pointer({ clientX, clientY } as any, svgNode);
         const untransformed = transform.invert(svgPoint as [number, number]);
         const coordsFallback = projection.invert?.(untransformed as [number, number]);
         lastClickScreenRef.current = { clientX, clientY };
@@ -568,6 +568,19 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
         if (cx < rect.left || cx > rect.right || cy < rect.top || cy > rect.bottom) return;
         // if the target is inside the svg, let existing handlers handle it
         if (svgNode.contains(e.target as Node)) return;
+
+        // Check if the target is inside any panel or UI element
+        const target = e.target as Element;
+        if (target) {
+          // Check if click is on RightPanel, LeftPanel or any other UI panel
+          const rightPanel = target.closest('.right-panel-container');
+          const leftPanel = target.closest('.left-panel-wrapper, .asteroid-panel');
+          const uiElement = target.closest('button, input, select, textarea, .panel, .modal, .dialog, .popover, .tooltip');
+
+          if (rightPanel || leftPanel || uiElement) {
+            return; // Don't trigger map click if clicking on UI elements
+          }
+        }
         const coords = screenToGeoFromClient(cx, cy);
         if (coords && onMapClickRef.current) onMapClickRef.current(coords as [number, number]);
       } catch (err) {
@@ -703,7 +716,7 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
         }}
       />
       {/* Botões no canto superior esquerdo */}
-      <div style={{ position: "absolute", top: 12, left: 12, zIndex: 1000, display: "flex", gap: "8px" }}>
+      {/* <div style={{ position: "absolute", top: 12, left: 12, zIndex: 1000, display: "flex", gap: "8px" }}>
         <button
           onClick={() => setShowPopLayer((prev) => !prev)}
           style={{
@@ -719,7 +732,7 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
         >
           <UsersIcon />
         </button>
-      </div>
+      </div> */}
       {/* Legenda dos múltiplos círculos - aparece quando há simulação completa */}
       <MultiImpactLegend
         isVisible={!!(impactResults && impactResults.energy_megatons_tnt && impactResults.crater_diameter_km)}

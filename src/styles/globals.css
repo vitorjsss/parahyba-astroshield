@@ -217,3 +217,53 @@ html {
 *::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* Scrollbar específica para ImpactResults - sempre visível */
+.impact-results-scroll {
+  scrollbar-width: auto !important;
+  /* Força scrollbar sempre visível no Firefox */
+  scrollbar-color: rgba(59, 130, 246, 0.3) rgba(0, 0, 0, 0.05) !important;
+}
+
+.impact-results-scroll::-webkit-scrollbar {
+  width: 8px !important;
+  height: 8px !important;
+}
+
+.impact-results-scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-radius: 4px !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.impact-results-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.4), rgba(59, 130, 246, 0.6)) !important;
+  border-radius: 4px !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+}
+
+.impact-results-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.6), rgba(59, 130, 246, 0.8)) !important;
+}
+
+/* Classe global para botões de simulate com estilo vermelho e translúcido */
+.simulate-btn-red {
+  background: rgba(220, 38, 38, 0.9) !important;
+  border-color: rgba(220, 38, 38, 1) !important;
+  color: #fff !important;
+  transition: all 0.3s ease !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3) !important;
+  border-radius: 20px !important;
+}
+
+.simulate-btn-red:hover {
+  background: rgba(185, 28, 28, 0.7) !important;
+  border-color: rgba(185, 28, 28, 0.8) !important;
+  color: #fff !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 6px 25px rgba(220, 38, 38, 0.4) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
