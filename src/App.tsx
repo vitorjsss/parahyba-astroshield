@@ -322,18 +322,24 @@ export default function App() {
                 impactResults={simulationResults?.api}
               />
               {!impactPoint && !selectedAsteroid && (
-                <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">
                   <p className="opacity-80">
-                    Click anywhere on the map to set the asteroid impact
-                    location
+                    - Click anywhere on the map to set the asteroid impact
+                    location 
+                  </p>
+                  <p className="opacity-80" align="center">
+                    - Use scroll to zoom and drag to pan
                   </p>
                 </div>
               )}
               {!impactPoint && selectedAsteroid && (
-                <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-card/90 backdrop-blur-sm border border-border/50 rounded-lg px-6 py-3 shadow-lg">
                   <p className="opacity-80">
                     <span className="text-primary font-medium">{selectedAsteroid.name}</span> impact simulation completed!
-                    Click anywhere on the map to change the impact location
+                    - Click anywhere on the map to change the impact location
+                  </p>
+                  <p className="opacity-80" align="center">
+                    - Use scroll to zoom and drag to pan
                   </p>
                 </div>
               )}

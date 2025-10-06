@@ -3,11 +3,17 @@
   position: fixed;
   top: 80px;
   right: 20px;
-  z-index: 1000;
+  z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   font-family: "Inter", sans-serif;
+  pointer-events: none; /* Disable pointer events by default */
+}
+
+/* Always allow interactions with the toggle button */
+.right-panel-container .panel-toggle-btn {
+  pointer-events: auto;
 }
 
 /* === Botão flutuante redondo no topo === */
@@ -73,6 +79,7 @@
 .slide-panel.open {
   transform: scaleY(1);
   opacity: 1;
+  pointer-events: auto; /* Enable pointer events only when open */
 }
 
 /* Tabs */

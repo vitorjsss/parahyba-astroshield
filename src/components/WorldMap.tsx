@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import { feature } from "topojson-client";
-import { UsersIcon, ZoomInIcon, ZoomOutIcon, HandIcon, XIcon } from "lucide-react";
+import { UsersIcon, XIcon } from "lucide-react";
 import { NASAAsteroid } from "../types/nasa";
 import { MultiImpactLegend } from "./MultiImpactLegend";
-import { ImpactApiResult } from "../utils/Api";
+import { ImpactApiResult } from "../utils/api";
 
 interface WorldMapProps {
   onMapClick?: (coordinates: [number, number]) => void;
@@ -19,7 +19,7 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [showPopLayer, setShowPopLayer] = useState(false);
-  const [isHandToolActive, setIsHandToolActive] = useState(false);
+  // removed hand tool state - right-click drag will be used for panning
   const zoomBehaviorRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
   const populationCacheRef = useRef<Record<string, number | null>>({});
   const fetchInProgressRef = useRef<Record<string, boolean>>({});
@@ -31,6 +31,8 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
   const svgSelectionRef = useRef<d3.Selection<SVGSVGElement, unknown, null, undefined> | null>(null);
   const impactGroupRef = useRef<d3.Selection<SVGGElement, unknown, null, undefined> | null>(null);
   const projectionRef = useRef<d3.GeoProjection | null>(null);
+  // store last click client position to resolve dateline wrap selection
+  const lastClickScreenRef = useRef<{ clientX: number; clientY: number } | null>(null);
 
   // Atualizamos a referência da função onMapClick sempre que ela mudar
   useEffect(() => {
@@ -48,7 +50,31 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
     if (!impactPoint) return;
 
     const projection = projectionRef.current;
-    const coords = projection(impactPoint);
+
+    // Handle dateline wrap: choose lon + k*360 that projects to the visible area
+    const [lon, lat] = impactPoint;
+    const svgNode = svgRef.current!;
+    const transform = d3.zoomTransform(svgNode);
+    const width = dimensions.width;
+
+    let coords: [number, number] | null = null;
+    try {
+      let best: { p: [number, number]; score: number } | null = null;
+      const shifts = [0, -360, 360];
+      // prefer the click x position if we have it, otherwise fallback to center
+      const clickX = lastClickScreenRef.current ? lastClickScreenRef.current.clientX : width / 2;
+      for (const s of shifts) {
+        const candidate = projection([lon + s, lat]);
+        if (!candidate) continue;
+        const screenX = candidate[0] * transform.k + transform.x;
+        const score = Math.abs(screenX - clickX); // closeness to where user clicked
+        if (!best || score < best.score) best = { p: candidate as [number, number], score };
+      }
+      if (best) coords = best.p;
+    } catch (e) {
+      // fallback
+      coords = projection(impactPoint);
+    }
     if (!coords) return;
 
     console.log("🎯 IMPACTO DETECTADO:", {
@@ -271,43 +297,7 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
   }, []);
 
   // Effect to update hand tool behavior
-  useEffect(() => {
-    if (!svgSelectionRef.current || !zoomBehaviorRef.current) return;
-
-    const svg = svgSelectionRef.current;
-
-    if (isHandToolActive) {
-      // Enable dragging when hand tool is active
-      svg.style("cursor", "grab");
-
-      // Re-configurar o comportamento de zoom para permitir arrasto
-      svg.call(zoomBehaviorRef.current.filter((event: any) => {
-        if (event.type === 'wheel') return false; // Ainda desabilita zoom por roda
-        if (event.type === 'mousedown' || event.type === 'touchstart') return true; // Permite arrasto
-        return !event.button;
-      }));
-    } else {
-      // Disable dragging when hand tool is inactive
-      svg.style("cursor", "default");
-
-      // Re-configurar o comportamento de zoom para desabilitar arrasto
-      svg.call(zoomBehaviorRef.current.filter((event: any) => {
-        if (event.type === 'wheel') return false; // Ainda desabilita zoom por roda
-        if (event.type === 'mousedown' || event.type === 'touchstart') return false; // Desabilita arrasto
-        return !event.button;
-      }));
-    }
-
-    // Atualizar handlers de mousedown/mouseup para cursor
-    svg.on("mousedown.cursor", function (this: SVGSVGElement) {
-      if (isHandToolActive) d3.select(this).style("cursor", "grabbing");
-    });
-
-    svg.on("mouseup.cursor", function (this: SVGSVGElement) {
-      if (isHandToolActive) d3.select(this).style("cursor", "grab");
-    });
-
-  }, [isHandToolActive]);
+  // Hand-tool removed; right-click drag will be used for panning. Cursor will be managed by CSS/D3 default.
 
   useEffect(() => {
     if (!svgRef.current || dimensions.width === 0) return;
@@ -353,15 +343,15 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
       })
       // Definir um comportamento inicial de zoom - será atualizado pelo useEffect dedicado para o handTool
       .filter((event: any) => {
-        // Desabilitar zoom por roda do mouse
-        if (event.type === 'wheel') return false;
+        // Allow wheel zoom
+        if (event.type === 'wheel') return true;
 
-        // Configuração inicial do comportamento de arrasto (será atualizado pelo useEffect específico)
-        if (event.type === 'mousedown' || event.type === 'touchstart') {
-          return false; // Inicialmente desabilitado
+        // Allow panning on mousedown/touchstart for any button (we will restrict impact creation to left button)
+        if (event.type === 'mousedown' || event.type === 'touchstart' || event.type === 'pointerdown') {
+          return true;
         }
 
-        // Permitir zoom programático por botões
+        // Allow programmatic zooming
         return !event.button;
       });
 
@@ -378,7 +368,112 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
       // Disable double-click zoom behavior
       .on("dblclick.zoom", null);
 
+    // Prevent default context menu on right-click so we can use right-button drag
+    svg.on("contextmenu", function (event: any) {
+      event.preventDefault();
+    });
+
+    // Ensure right-click drags are handled by d3.zoom: listen for pointerdown and call native handler
+    // (d3.zoom already handles pointerdown if filter allows it)
+    // We also make sure left-clicks still create impacts via the svg.on('click') handler which checks event.button
+
     const g = svg.append("g");
+    // Helper: convert a mouse event to geographic coordinates (lon, lat),
+    // accounting for the current zoom transform and any SVG CTM.
+    function screenToGeo(event: MouseEvent) {
+      const svgNode = svgRef.current!;
+      const gNode = g.node() as SVGGElement | null;
+
+      try {
+        // Create an SVGPoint at the client (screen) coordinates
+        // Use the SVG API for precise transformation handling
+        // @ts-ignore DOMPoint creation on SVG
+        const pt = (svgNode as any).createSVGPoint();
+        pt.x = (event as MouseEvent).clientX;
+        pt.y = (event as MouseEvent).clientY;
+
+        // Convert screen point to SVG coordinates
+        const svgCTM = svgNode.getScreenCTM();
+        if (!svgCTM) throw new Error('No svg CTM');
+        // @ts-ignore
+        const svgP = pt.matrixTransform(svgCTM.inverse());
+
+        if (gNode) {
+          const gCTM = gNode.getCTM();
+          if (gCTM) {
+            // Transform SVG coords into g's local coordinates by inverting g's CTM
+            // @ts-ignore
+            const local = svgP.matrixTransform(gCTM.inverse());
+            const coords = projection.invert?.([local.x, local.y]);
+            // Save the client click position for later (impact placement)
+            lastClickScreenRef.current = { clientX: (event as MouseEvent).clientX, clientY: (event as MouseEvent).clientY };
+            // eslint-disable-next-line no-console
+            console.log('screenToGeo(svg->gCTM) ->', { client: { x: pt.x, y: pt.y }, svgP, local, coords });
+            return coords;
+          }
+        }
+
+        // Fallback to d3.zoom transform inversion if CTM approach fails
+        const pt2 = d3.pointer(event, svgNode);
+        const transform = d3.zoomTransform(svgNode);
+        const untransformed = transform.invert(pt2);
+        const coordsFallback = projection.invert?.(untransformed as [number, number]);
+  // Save click position
+  lastClickScreenRef.current = { clientX: (event as MouseEvent).clientX, clientY: (event as MouseEvent).clientY };
+  // eslint-disable-next-line no-console
+  console.log('screenToGeo(fallback) ->', { pt2, untransformed, transform: { k: transform.k, x: transform.x, y: transform.y }, coordsFallback });
+  return coordsFallback;
+      } catch (err) {
+        // final fallback
+        const pt2 = d3.pointer(event, svgNode);
+        const transform = d3.zoomTransform(svgNode);
+        const untransformed = transform.invert(pt2);
+        // Save an approximate click position if available
+        lastClickScreenRef.current = { clientX: (event as MouseEvent).clientX, clientY: (event as MouseEvent).clientY };
+        // eslint-disable-next-line no-console
+        console.warn('screenToGeo error, using fallback', err, { pt2, untransformed });
+        return projection.invert?.(untransformed as [number, number]);
+      }
+    }
+    // Variant that accepts raw client coordinates (useful when an overlay intercepts the event)
+    function screenToGeoFromClient(clientX: number, clientY: number) {
+      const svgNode = svgRef.current!;
+      const gNode = g.node() as SVGGElement | null;
+      try {
+        // @ts-ignore
+        const pt = (svgNode as any).createSVGPoint();
+        pt.x = clientX;
+        pt.y = clientY;
+        const svgCTM = svgNode.getScreenCTM();
+        if (!svgCTM) throw new Error('No svg CTM');
+        // @ts-ignore
+        const svgP = pt.matrixTransform(svgCTM.inverse());
+        if (gNode) {
+          const gCTM = gNode.getCTM();
+          if (gCTM) {
+            // @ts-ignore
+            const local = svgP.matrixTransform(gCTM.inverse());
+            const coords = projection.invert?.([local.x, local.y]);
+            lastClickScreenRef.current = { clientX, clientY };
+            return coords;
+          }
+        }
+        // fallback
+  const transform = d3.zoomTransform(svgNode);
+  // convert client to svg pointer coords
+  const svgPoint = d3.pointer({ clientX, clientY } as any, svgNode);
+        const untransformed = transform.invert(svgPoint as [number, number]);
+        const coordsFallback = projection.invert?.(untransformed as [number, number]);
+        lastClickScreenRef.current = { clientX, clientY };
+        return coordsFallback;
+      } catch (err) {
+        const pt2 = d3.pointer({ clientX, clientY } as any, svgNode);
+        const transform = d3.zoomTransform(svgNode);
+        const untransformed = transform.invert(pt2 as [number, number]);
+        lastClickScreenRef.current = { clientX, clientY };
+        return projection.invert?.(untransformed as [number, number]);
+      }
+    }
     g.append("rect")
       .attr("width", width)
       .attr("height", height)
@@ -431,11 +526,12 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
               .attr("stroke-width", 0.5);
           })
           .on("click", function (this: SVGPathElement, event: MouseEvent) {
-            // Não permite gerar impactos quando a ferramenta de mão está ativa
-            if (isHandToolActive) return;
-
-            const [x, y] = d3.pointer(event, this);
-            const coords = projection.invert?.([x, y]);
+            // Only allow left-button clicks to create impacts
+            // (event.button === 0) ensures right-clicks are used for panning
+            // Note: Some browsers' synthetic events may differ; this is standard.
+            // @ts-ignore - event.button exists on MouseEvent
+            if ((event as any).button !== 0) return;
+            const coords = screenToGeo(event);
             if (coords && onMapClickRef.current) onMapClickRef.current(coords as [number, number]);
           });
 
@@ -445,16 +541,45 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
 
 
 
+    // Left-click on empty SVG creates impacts. Right-click will be used for panning.
     svg.on("click", function (this: SVGSVGElement, event: MouseEvent) {
-      // Não permite gerar impactos quando a ferramenta de mão está ativa
-      if (isHandToolActive) return;
+      // Only left-click should create an impact
+      if ((event as any).button !== 0) return;
 
       if (event.target === this || (event.target as Element)?.tagName === "rect") {
-        const [x, y] = d3.pointer(event);
-        const coords = projection.invert?.([x, y]);
+        const coords = screenToGeo(event);
         if (coords && onMapClickRef.current) onMapClickRef.current(coords as [number, number]);
       }
     });
+
+    // If an overlay (e.g. RightPanel) is intercepting pointer events but the user clicked
+    // over the visible area of the map, capture pointerdown in the capture phase on document
+    // and translate it into a map click. We skip events whose target is inside the SVG
+    // so the normal handlers run.
+    function onDocPointerDown(e: PointerEvent) {
+      try {
+        // only left button
+        if (e.button !== 0) return;
+        const svgNode = svgRef.current;
+        if (!svgNode) return;
+        const rect = svgNode.getBoundingClientRect();
+        const cx = e.clientX;
+        const cy = e.clientY;
+        if (cx < rect.left || cx > rect.right || cy < rect.top || cy > rect.bottom) return;
+        // if the target is inside the svg, let existing handlers handle it
+        if (svgNode.contains(e.target as Node)) return;
+        const coords = screenToGeoFromClient(cx, cy);
+        if (coords && onMapClickRef.current) onMapClickRef.current(coords as [number, number]);
+      } catch (err) {
+        // ignore
+      }
+    }
+    document.addEventListener('pointerdown', onDocPointerDown, true);
+
+    // cleanup
+    return () => {
+      document.removeEventListener('pointerdown', onDocPointerDown, true);
+    };
 
     // -------------------- Population Layer --------------------
     function drawPopulationLayer(
@@ -576,7 +701,6 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
           display: "block",
           touchAction: "none" // Prevent default touch behaviors
         }}
-        onWheel={(e) => e.preventDefault()} // Prevent default scroll behavior
       />
       {/* Botões no canto superior esquerdo */}
       <div style={{ position: "absolute", top: 12, left: 12, zIndex: 1000, display: "flex", gap: "8px" }}>
@@ -595,100 +719,13 @@ export function WorldMap({ onMapClick, impactPoint, selectedAsteroid, impactResu
         >
           <UsersIcon />
         </button>
-
-        {/* Botão Limpar - aparece apenas quando há simulação ativa */}
-        {(impactPoint || selectedAsteroid || impactResults) && (
-          <button
-            onClick={() => {
-              if (onClearSimulation) {
-                onClearSimulation();
-              }
-            }}
-            style={{
-              background: "#dc2626",
-              color: "#fff",
-              border: "none",
-              padding: "8px 12px",
-              borderRadius: 6,
-              cursor: "pointer",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
-            }}
-            title="Limpar simulação de impacto e deselecionar asteroide"
-          >
-            <XIcon />
-          </button>
-        )}
       </div>
-
       {/* Legenda dos múltiplos círculos - aparece quando há simulação completa */}
       <MultiImpactLegend
         isVisible={!!(impactResults && impactResults.energy_megatons_tnt && impactResults.crater_diameter_km)}
       />
 
-      {/* Botões de zoom e arrasto no canto inferior direito */}
-      <div style={{ position: "absolute", bottom: 12, right: 12, zIndex: 1000, display: "flex", gap: "8px" }}>
-        <button
-          onClick={() => {
-            if (zoomBehaviorRef.current && svgRef.current) {
-              const svg = d3.select(svgRef.current);
-              const currentTransform = d3.zoomTransform(svgRef.current);
-              const newScale = currentTransform.k * 1.3; // Zoom in by 30%
-              svg.transition().duration(300).call(zoomBehaviorRef.current.scaleTo, newScale);
-            }
-          }}
-          style={{
-            background: "#111827",
-            color: "#fff",
-            border: "none",
-            padding: "8px 12px",
-            borderRadius: 6,
-            cursor: "pointer",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
-          }}
-          title="Zoom In"
-        >
-          <ZoomInIcon />
-        </button>
-
-        <button
-          onClick={() => {
-            if (zoomBehaviorRef.current && svgRef.current) {
-              const svg = d3.select(svgRef.current);
-              const currentTransform = d3.zoomTransform(svgRef.current);
-              const newScale = currentTransform.k / 1.3; // Zoom out by 30%
-              svg.transition().duration(300).call(zoomBehaviorRef.current.scaleTo, newScale);
-            }
-          }}
-          style={{
-            background: "#111827",
-            color: "#fff",
-            border: "none",
-            padding: "8px 12px",
-            borderRadius: 6,
-            cursor: "pointer",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
-          }}
-          title="Zoom Out"
-        >
-          <ZoomOutIcon />
-        </button>
-
-        <button
-          onClick={() => setIsHandToolActive((prev) => !prev)}
-          style={{
-            background: isHandToolActive ? "#0284c7" : "#111827",
-            color: "#fff",
-            border: "none",
-            padding: "8px 12px",
-            borderRadius: 6,
-            cursor: "pointer",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.4)",
-          }}
-          title="Ativar/Desativar ferramenta mão para arrastar o mapa"
-        >
-          <HandIcon />
-        </button>
-      </div>
+      {/* Zoom buttons and hand tool removed; wheel zoom and right-click drag are enabled */}
     </div>
   );
 }
